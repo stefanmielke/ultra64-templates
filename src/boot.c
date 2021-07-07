@@ -83,14 +83,9 @@ OSIoMesg dmaIOMessageBuf; /* * see man page to understand this */
 /*
  * global variables
  */
-static int debugflag = 0;
 int rdp_flag = 0;
 char *staticSegment;
 char *textureSegment;
-
-#ifdef DEBUG
-static u32 argbuf[256];
-#endif
 
 OSPiHandle *handler;
 
@@ -145,40 +140,6 @@ static void idle(void *arg) {
  * This is the main routine of the app.
  */
 static void mainproc(void *arg) {
-#ifdef DEBUG
-	int i;
-	char *ap;
-	u32 *argp;
-
-	/*
-	 * get arguments (options)
-	 */
-	argp = (u32 *)RAMROM_APP_WRITE_ADDR;
-	for (i = 0; i < sizeof(argbuf) / 4; i++, argp++) {
-		osEPiReadIo(handler, (u32)argp, &argbuf[i]); /* Assume no DMA */
-	}
-	((char *)argbuf)[sizeof(argbuf) - 1] = '\0';
-
-	/*
-	 * Parse the options
-	 */
-	ap = (char *)argbuf;
-	position_str = (char *)0;
-	while (*ap != '\0') {
-		while (*ap == ' ')
-			ap++;
-		if (*ap == '-' && *(ap + 1) == 'r') {
-			rdp_flag = 1;
-			ap += 2;
-		} else if (*ap == '-' && *(ap + 1) == 'i') {
-			ap += 2;
-			position_str = ap;
-			break; /* -i must be last argument */
-		} else
-			ap++;
-	}
-#endif
-
 	/*
 	 * Setup the message queues
 	 */

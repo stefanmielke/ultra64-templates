@@ -779,10 +779,6 @@ void game(void) {
 		gDPFullSync(glistp++);
 		gSPEndDisplayList(glistp++);
 
-#ifdef DEBUG
-		assert((glistp - dynamicp->glist) < GLIST_LEN);
-#endif
-
 		/*
 		 * Build graphics task:
 		 *
@@ -838,49 +834,6 @@ void game(void) {
 		 * start up the RSP task
 		 */
 		osSpTaskStart(theadp);
-
-		/*
-		 * Dump RSP if requested
-		 */
-
-#ifdef DEBUG
-
-		if (dumpmenu[DM_POSITION].val == 1.0) {
-			u32 *p;
-			MenuItem *m, *i;
-			int done = 0;
-			dumpmenu[DM_POSITION].val = 0.0;
-			osSyncPrintf("gload -a \"-i ");
-			for (p = (u32 *)&pp; p < (u32 *)(&pp + 1); p++) {
-				osSyncPrintf("x%x", *p);
-			}
-			m = mainmenu;
-			i = m;
-			while (!done) {
-				while (i->type != MT_END) {
-					if (i->type == MT_MENU) {
-						if (i->nextmenu[1].type == MT_UPMENU) {
-							i->nextmenu[1].nextmenu = m;
-							i->nextmenu[1].val = *((float *)&i);
-							m = i->nextmenu;
-							i = &m[2];
-						}
-					} else {
-						osSyncPrintf("m%x", *((int *)&i->val));
-						i++;
-					}
-				}
-				if (m[1].type == MT_UPMENU) {
-					i = (MenuItem *)*((int *)&m[1].val);
-					i++;
-					m = m[1].nextmenu;
-				} else
-					done = 1;
-			}
-
-			osSyncPrintf("m\"\n");
-		}
-#endif
 
 		/*
 		 * wait for DP completion
