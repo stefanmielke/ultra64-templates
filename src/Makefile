@@ -13,7 +13,7 @@
 
 include /usr/include/n64/make/PRdefs
 
-OPTIMIZER = -O2 -Wall -Wno-missing-braces
+OPTIMIZER = -O2
 LCDEFS    = -D_FINALROM -DNDEBUG -DF3DEX_GBI_2
 N64LIB    = -lultra_rom
 
