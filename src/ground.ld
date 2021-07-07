@@ -63,8 +63,8 @@ SECTIONS
    
    BEGIN_SEG(static, 0x01000000)
    {
-      gfxinit.o(.data);
-      gfxstatic.o(.data);
+      data/gfxinit.o(.data);
+      data/gfxstatic.o(.data);
    }
    END_SEG(static)
 
@@ -72,13 +72,13 @@ SECTIONS
    
    BEGIN_NOLOAD(rsp_cfb)
    {
-      rsp_cfb.o(.bss);
+      data/rsp_cfb.o(.bss);
    }
    END_NOLOAD(rsp_cfb)
    
    BEGIN_SEG(texture, 0x04000000)
    {
-      texture.o(.data);
+      data/texture.o(.data);
    }
    END_SEG(texture)
 
@@ -86,7 +86,7 @@ SECTIONS
    
    BEGIN_NOLOAD(zbuffer)
    {
-      zbuffer.o(.bss*);
+      data/zbuffer.o(.bss*);
    }
    END_NOLOAD(zbuffer)
 
@@ -94,7 +94,7 @@ SECTIONS
    
    BEGIN_NOLOAD(cfb)
    {
-      cfb.o(.bss*);
+      data/cfb.o(.bss*);
    }
    END_NOLOAD(cfb)
 

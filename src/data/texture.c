@@ -23,5 +23,5 @@
 /*
  * TEXTURES
  */
-#include "../textures/RGBA16molecule.h"
-#include "../textures/RGBA16brick.h"
+#include "data/RGBA16molecule.h"
+#include "data/RGBA16brick.h"
