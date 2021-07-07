@@ -20,4 +20,4 @@
 #include <ultra64.h>
 #include "boot.h"
 
-u16	rsp_cfb[SCREEN_WD*SCREEN_HT];
+u16 rsp_cfb[SCREEN_WD * SCREEN_HT];

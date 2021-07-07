@@ -18,7 +18,7 @@ LCDEFS    = -D_FINALROM -DNDEBUG -DF3DEX_GBI_2
 N64LIB    = -lultra_rom
 
 ELF		= ground.elf
-TARGETS	= ground.z64
+TARGETS	= ../ground.z64
 MAP		= ground.map
 
 LD_SCRIPT	 = ground.ld
@@ -26,10 +26,8 @@ CP_LD_SCRIPT = ground_cp.ld
 
 ASMFILES   := $(wildcard asm/*.s)
 ASMOBJECTS  = $(ASMFILES:.s=.o)
-
 CODEFILES  := $(wildcard *.c)
 CODEOBJECTS = $(CODEFILES:.c=.o)
-
 DATAFILES  := $(wildcard data/*.c)
 DATAOBJECTS = $(DATAFILES:.c=.o)
 

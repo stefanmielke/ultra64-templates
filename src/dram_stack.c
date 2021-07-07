@@ -15,11 +15,11 @@
 #include "game.h"
 
 /*---------------------------------------------------------------------*
-        Copyright (C) 1997,1998 Nintendo. (Originated by SGI)
-        
-        $RCSfile: dram_stack.c,v $
-        $Revision: 1.3 $
-        $Date: 1998/12/24 11:50:22 $
+		Copyright (C) 1997,1998 Nintendo. (Originated by SGI)
+
+		$RCSfile: dram_stack.c,v $
+		$Revision: 1.3 $
+		$Date: 1998/12/24 11:50:22 $
  *---------------------------------------------------------------------*/
 /*
  * buffers for RSP tasks:
@@ -29,7 +29,6 @@
  * buffers used by fifo microcode only
  */
 
-
 /*  for CodeWarrior compiler */
 #ifdef __MWERKS__
 #pragma align(16)
@@ -38,15 +37,13 @@
 #if __GNUC__ /* { */
 
 /* for GNU compiler */
-u64 dram_stack[SP_DRAM_STACK_SIZE64] __attribute__((aligned (16))); /* used for matrix stack */
-u64 rdp_output[RDP_OUTPUT_LEN] __attribute__((aligned (16))); /* buffer for RDP DL */
+u64 dram_stack[SP_DRAM_STACK_SIZE64] __attribute__((aligned(16))); /* used for matrix stack */
+u64 rdp_output[RDP_OUTPUT_LEN] __attribute__((aligned(16)));	   /* buffer for RDP DL */
 
 #else /* }{ */
 
 /* for SGI compiler */
-u64 dram_stack[SP_DRAM_STACK_SIZE64];	/* used for matrix stack */
-u64 rdp_output[RDP_OUTPUT_LEN];		/* buffer for RDP DL */
+u64 dram_stack[SP_DRAM_STACK_SIZE64]; /* used for matrix stack */
+u64 rdp_output[RDP_OUTPUT_LEN];		  /* buffer for RDP DL */
 
 #endif /* } */
-
-
