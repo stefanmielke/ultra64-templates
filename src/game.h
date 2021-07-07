@@ -1,22 +1,3 @@
-
-/**************************************************************************
- *                                                                        *
- *               Copyright (C) 1995, Silicon Graphics, Inc.               *
- *                                                                        *
- *  These coded instructions, statements, and computer programs  contain  *
- *  unpublished  proprietary  information of Silicon Graphics, Inc., and  *
- *  are protected by Federal copyright  law.  They  may not be disclosed  *
- *  to  third  parties  or copied or duplicated in any form, in whole or  *
- *  in part, without the prior written consent of Silicon Graphics, Inc.  *
- *                                                                        *
- *************************************************************************/
-
-/*
- * File:	game.h
- * Create Date:	Thu Dec 14 13:52:23 PST 1995
- *
- */
-
 #include "boot.h"
 
 /*
@@ -43,6 +24,7 @@ extern u64 dram_stack[];
 /* buffer for RDP DL */
 extern u64 rdp_output[];
 
+#define MAX_WALLS 100
 /*
  * Layout of dynamic data.
  *
@@ -58,6 +40,8 @@ typedef struct {
 	Mtx ballshadowmodel;
 	Mtx ballshadowmodel2;
 	Mtx viewing;
+	Mtx wall_y_rotation;
+	Mtx wall_position[MAX_WALLS];
 	Gfx glist[GLIST_LEN];
 } Dynamic;
 

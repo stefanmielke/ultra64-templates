@@ -1,29 +1,3 @@
-/**************************************************************************
- *                                                                        *
- *               Copyright (C) 1995, Silicon Graphics, Inc.               *
- *                                                                        *
- *  These coded instructions, statements, and computer programs  contain  *
- *  unpublished  proprietary  information of Silicon Graphics, Inc., and  *
- *  are protected by Federal copyright  law.  They  may not be disclosed  *
- *  to  third  parties  or copied or duplicated in any form, in whole or  *
- *  in part, without the prior written consent of Silicon Graphics, Inc.  *
- *                                                                        *
- *************************************************************************/
-
-/*---------------------------------------------------------------------*
-		Copyright (C) 1998 Nintendo. (Originated by SGI)
-
-		$RCSfile: boot.c,v $
-		$Revision: 1.11 $
-		$Date: 1998/12/24 12:07:03 $
- *---------------------------------------------------------------------*/
-
-/*
- * File:  boot.c
- * Created: Thu Dec 14 16:48:01 PST 1995
- *
- */
-
 #include <ultra64.h>
 #include <PR/ramrom.h> /* needed for argument passing into the app */
 #include <assert.h>

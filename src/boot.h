@@ -1,22 +1,3 @@
-
-/**************************************************************************
- *                                                                        *
- *               Copyright (C) 1995, Silicon Graphics, Inc.               *
- *                                                                        *
- *  These coded instructions, statements, and computer programs  contain  *
- *  unpublished  proprietary  information of Silicon Graphics, Inc., and  *
- *  are protected by Federal copyright  law.  They  may not be disclosed  *
- *  to  third  parties  or copied or duplicated in any form, in whole or  *
- *  in part, without the prior written consent of Silicon Graphics, Inc.  *
- *                                                                        *
- *************************************************************************/
-
-/*
- * File:	boot.h
- * Create Date:	Thu Dec 14 11:40:21 PST 1995
- *
- */
-
 #define STATIC_SEGMENT 1
 #define CFB_SEGMENT 2
 #define DYNAMIC_SEGMENT 3

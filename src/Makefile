@@ -27,7 +27,8 @@ CP_LD_SCRIPT = ground_cp.ld
 ASMFILES   := $(wildcard asm/*.s)
 ASMOBJECTS  = $(ASMFILES:.s=.o)
 CODEFILES  := $(wildcard *.c)
-CODEOBJECTS = $(CODEFILES:.c=.o)
+WALLFILES  := $(wildcard walls/*.c)
+CODEOBJECTS = $(CODEFILES:.c=.o) $(WALLFILES:.c=.o)
 DATAFILES  := $(wildcard data/*.c)
 DATAOBJECTS = $(DATAFILES:.c=.o)
 

@@ -1,29 +1,3 @@
-/**************************************************************************
- *                                                                        *
- *               Copyright (C) 1995, Silicon Graphics, Inc.               *
- *                                                                        *
- *  These coded instructions, statements, and computer programs  contain  *
- *  unpublished  proprietary  information of Silicon Graphics, Inc., and  *
- *  are protected by Federal copyright  law.  They  may not be disclosed  *
- *  to  third  parties  or copied or duplicated in any form, in whole or  *
- *  in part, without the prior written consent of Silicon Graphics, Inc.  *
- *                                                                        *
- *************************************************************************/
-
-/*---------------------------------------------------------------------*
-		Copyright (C) 1997,1998 Nintendo. (Originated by SGI)
-
-		$RCSfile: game.c,v $
-		$Revision: 1.12 $
-		$Date: 1999/01/14 10:11:46 $
- *---------------------------------------------------------------------*/
-
-/*
- * File:  game.c
- *
- *
- */
-
 #include <ultra64.h>
 #include <PR/ramrom.h> /* needed for argument passing into the app */
 #include <assert.h>
@@ -120,6 +94,24 @@ int fontcol[4];		 /* color for shadowed fonts */
 	}
 
 #define NEAR_MAX 8192.0 /* near plane max value */
+
+int wall_count;
+
+#define DRAW_WALL_X(x, y)                                                                          \
+	guTranslate(&dynamic.wall_position[wall_count], x, y, 0);                                      \
+	gSPMatrix(glistp++, OS_K0_TO_PHYSICAL(&(dynamic.wall_position[wall_count])),                   \
+			  G_MTX_MODELVIEW | G_MTX_LOAD | G_MTX_NOPUSH);                                        \
+	gSPDisplayList(glistp++, wall_x_dl);                                                           \
+	wall_count++;
+
+#define DRAW_WALL_Y(x, y)                                                                          \
+	gSPMatrix(glistp++, OS_K0_TO_PHYSICAL(&(dynamic.wall_y_rotation)),                             \
+			  G_MTX_MODELVIEW | G_MTX_LOAD | G_MTX_NOPUSH);                                        \
+	guTranslate(&dynamic.wall_position[wall_count], x, 0, y);                                      \
+	gSPMatrix(glistp++, OS_K0_TO_PHYSICAL(&(dynamic.wall_position[wall_count])),                   \
+			  G_MTX_MODELVIEW | G_MTX_MUL | G_MTX_NOPUSH);                                         \
+	gSPDisplayList(glistp++, wall_x_dl);                                                           \
+	wall_count++;
 
 /*
  * Menus
@@ -221,10 +213,13 @@ void game(void) {
 	unsigned short *loadtex;
 	float balla = -0.02, ballv = 0.0, ballp = 0.0, ballvi = 0.3;
 
+	guRotate(&(dynamic.wall_y_rotation), 90, 0, 1, 0);
+
 	/*
 	 * Main game loop
 	 */
 	while (1) {
+		wall_count = 0;
 		pad = ReadController(CONT_G | CONT_A | CONT_START | CONT_L | CONT_UP | CONT_DOWN |
 							 CONT_LEFT | CONT_RIGHT);
 
@@ -567,6 +562,11 @@ void game(void) {
 			gSP1Triangle(glistp++, 0, 2, 1, 0);
 		if ((int)dumpmenu[DM_TRIMASK].val & 2)
 			gSP1Triangle(glistp++, 2, 0, 3, 0);
+
+		DRAW_WALL_Y(0, 0);
+		DRAW_WALL_Y(0, 10);
+		DRAW_WALL_X(0, 0);
+		DRAW_WALL_X(10, 0);
 
 		/*
 		 * Draw the Ball and Shadow
