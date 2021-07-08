@@ -1,0 +1,12 @@
+
+**/*.z64
+**/*.n64
+**/*.map
+**/*.ld
+*.o
+*.elf
+
+!2d.ld
+
+/.vscode/**
+!/.vscode/tasks.json
