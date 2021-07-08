@@ -42,6 +42,7 @@ void stage00_draw(void) {
 
 	clear_background(21, 22, 29);
 
+	// this can be set _per sprite_ if needed
 	gDPSetCycleType(glistp++, G_CYC_1CYCLE);
 	gDPSetCombineMode(glistp++, G_CC_DECALRGBA, G_CC_DECALRGBA);
 	gDPSetRenderMode(glistp++, G_RM_AA_ZB_TEX_EDGE, G_RM_AA_ZB_TEX_EDGE);
@@ -61,7 +62,6 @@ void stage00_draw(void) {
 
 	// renders console output
 	// nuDebConDisp(NU_SC_NOSWAPBUFFER);
-
 	// nuGfxTaskStart(glist, (s32)(glistp - glist) * sizeof(Gfx), NU_GFX_UCODE_F3DEX2,
 	// 			   NU_SC_SWAPBUFFER);
 }
@@ -105,8 +105,6 @@ void draw_pyoro_scaled(int x, int y, float scale_x, float scale_y) {
 	s32 sx = (int)((1 << 10) / scale_x + 0.5F);
 	s32 sy = (int)((1 << 10) / scale_y + 0.5F);
 
-	// Set cycle type and all other settings here
-
 	gDPLoadTextureBlock(glistp++, spr_pyoro_walk1, G_IM_FMT_RGBA, G_IM_SIZ_16b, 16, 16, 0,
 						G_TX_CLAMP, G_TX_CLAMP, 4, 4,  // 2 to the power of 4 is 16
 						G_TX_NOLOD, G_TX_NOLOD);
@@ -138,8 +136,6 @@ void draw_pyoro_rotated(int x, int y, double ang) {
 				continue;  // Ignore points outside our range
 			newimage[i + j * 16] = image[y * 16 + x];
 		}
-
-	// Set cycle type and all other settings here
 
 	gDPLoadTextureBlock(glistp++, newimage, G_IM_FMT_RGBA, G_IM_SIZ_16b, 16, 16, 0, G_TX_CLAMP,
 						G_TX_CLAMP, G_TX_NOMASK, G_TX_NOMASK, G_TX_NOLOD, G_TX_NOLOD);
