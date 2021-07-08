@@ -3,6 +3,7 @@
 #include "../graphic.h"
 #include "../definitions.h"
 
+#include "../data/spr_peons.h"
 #include "../data/spr_pyoro_walk1.h"
 
 u16 pyoro_pos_x, pyoro_pos_y;
@@ -12,6 +13,7 @@ float scale_inc;
 
 void clear_background(u8 r, u8 g, u8 b);
 void draw_rect(u16 x, u16 y, u16 w, u16 h, u8 r, u8 g, u8 b);
+void draw_peon(u16 x, u16 y);
 void draw_pyoro(u16 x, u16 y);
 void draw_pyoro_scaled(int x, int y, float scale_x, float scale_y);
 void draw_pyoro_rotated(int x, int y, double ang);
@@ -51,6 +53,7 @@ void stage00_draw(void) {
 	gDPSetPrimDepth(glistp++, 0, 0);
 	gDPSetTexturePersp(glistp++, G_TP_NONE);
 
+	draw_peon(10, 10);
 	draw_pyoro(pyoro_pos_x, pyoro_pos_y);
 	draw_pyoro_scaled(pyoro_pos_x + 32, pyoro_pos_y, pyoro_scale_x, pyoro_scale_y);
 	draw_pyoro_rotated(pyoro_pos_x + 64, pyoro_pos_y, pyoro_rot);
@@ -89,6 +92,14 @@ void draw_rect(u16 x, u16 y, u16 w, u16 h, u8 r, u8 g, u8 b) {
 	gDPSetFillColor(glistp++, (GPACK_RGBA5551(r, g, b, 1) << 16 | GPACK_RGBA5551(r, g, b, 1)));
 	gDPFillRectangle(glistp++, x, y, x + w, y + h);
 	gDPPipeSync(glistp++);
+}
+
+void draw_peon(u16 x, u16 y) {
+	load_spr_peons(glistp);
+	draw_spr_peon(glistp, x, y, 0);
+	draw_spr_peon(glistp, x, y + 8, 1);
+	draw_spr_peon(glistp, x, y + 16, 2);
+	draw_spr_peon(glistp, x, y + 24, 3);
 }
 
 void draw_pyoro(u16 x, u16 y) {

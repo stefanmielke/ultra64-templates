@@ -53,6 +53,7 @@ cleaner:
 	find . -name '*.sprite' -delete
 	find . -name '*.dfs' -delete
 	find . -name '*.raw' -delete
+	find . -name '*.gen.h' -delete
 	rm -f ../*.z64 ../*.n64
 
 include $(COMMONRULES)
