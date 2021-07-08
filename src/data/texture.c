@@ -10,5 +10,4 @@
 /*
  * TEXTURES
  */
-#include "data/RGBA16molecule.h"
-#include "data/RGBA16brick.h"
+#include "RGBA16molecule.h"
