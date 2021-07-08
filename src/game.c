@@ -224,34 +224,6 @@ void game(void) {
 		DRAW_WALL_X(0, 0);
 		DRAW_WALL_X(10, 0);
 
-		/*
-		 * Draw the Ball and Shadow
-		 */
-		ballv += balla;
-		ballp += ballv;
-		if (ballp < 1.0) {
-			ballp = 1.0;
-			ballv = ballvi;
-		}
-
-		gDPPipeSync(glistp++);
-		guPosition(&(dynamicp->ballmodel), 0, 0, 0, 1.0 / 20.0, pp.pos[0], pp.pos[1] + ballp,
-				   pp.pos[2]);
-		gSPMatrix(glistp++, OS_K0_TO_PHYSICAL(&(dynamicp->ballmodel)),
-				  G_MTX_MODELVIEW | G_MTX_LOAD | G_MTX_NOPUSH);
-		gSPDisplayList(glistp++, ball_setup_dl);
-		gSPDisplayList(glistp++, ball_dl);
-
-		guPosition(&(dynamicp->ballshadowmodel), 0, 0, 0, 1.0 / 20.0, pp.pos[0] - ballp / 0.8,
-				   pp.pos[1], pp.pos[2]);
-		guScale(&(dynamicp->ballshadowmodel2), 1.0, 0.0, 1.0);
-		gSPMatrix(glistp++, OS_K0_TO_PHYSICAL(&(dynamicp->ballshadowmodel2)),
-				  G_MTX_MODELVIEW | G_MTX_LOAD | G_MTX_NOPUSH);
-		gSPMatrix(glistp++, OS_K0_TO_PHYSICAL(&(dynamicp->ballshadowmodel)),
-				  G_MTX_MODELVIEW | G_MTX_MUL | G_MTX_NOPUSH);
-		gSPDisplayList(glistp++, ball_shadow_setup_dl);
-		gSPDisplayList(glistp++, ball_dl);
-
 		gDPFullSync(glistp++);
 		gSPEndDisplayList(glistp++);
 

@@ -43,30 +43,3 @@ Gfx ground_dl[] = {
 	*/
 	gsSPEndDisplayList(),
 };
-
-/*
- * BALL
- */
-#include "sphere_vtx.h"
-Gfx ball_dl[] = {
-#include "sphere_dl.h"
-	gsSPEndDisplayList()};
-
-Lights1 light = gdSPDefLights1(12, 12, 60, 150, 150, 75, 30, 40, 0);
-Gfx ball_setup_dl[] = {gsDPPipeSync(),
-					   gsSPTexture(0, 0, 0, 0, G_OFF),
-					   gsSPSetGeometryMode(G_LIGHTING | G_SHADE | G_SHADING_SMOOTH | G_ZBUFFER),
-					   gsDPSetCombineMode(G_CC_SHADE, G_CC_SHADE),
-					   gsSPSetLights1(light),
-
-					   gsSPEndDisplayList()};
-
-Gfx ball_shadow_setup_dl[] = {gsDPPipeSync(),
-							  gsSPTexture(0, 0, 0, 0, G_OFF),
-							  gsSPClearGeometryMode(G_LIGHTING | G_SHADE | G_SHADING_SMOOTH),
-							  gsSPSetGeometryMode(G_ZBUFFER),
-							  gsDPSetCombineMode(G_CC_PRIMITIVE, G_CC_PRIMITIVE),
-							  gsDPSetRenderMode(G_RM_AA_ZB_XLU_DECAL, G_RM_AA_ZB_XLU_DECAL2),
-							  gsDPSetPrimColor(0, 0, 0, 0, 0, 64),
-
-							  gsSPEndDisplayList()};
