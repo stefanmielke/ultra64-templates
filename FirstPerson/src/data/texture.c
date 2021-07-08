@@ -1,5 +1,5 @@
 /*
- * File:	gfxtexture.c
+ * File:	texture.c
  *
  * This file holds textures
  *
@@ -10,4 +10,4 @@
 /*
  * TEXTURES
  */
-#include "RGBA16molecule.h"
+#include "custom_textures.h"

@@ -17,12 +17,12 @@ OPTIMIZER = -O2
 LCDEFS    = -D_FINALROM -DNDEBUG -DF3DEX_GBI_2
 N64LIB    = -lultra_rom
 
-ELF		= ground.elf
-TARGETS	= ../ground.z64
-MAP		= ground.map
+ELF		= firstperson.elf
+TARGETS	= ../firstperson.z64
+MAP		= firstperson.map
 
-LD_SCRIPT	 = ground.ld
-CP_LD_SCRIPT = ground_cp.ld
+LD_SCRIPT	 = firstperson.ld
+CP_LD_SCRIPT = firstperson_cp.ld
 
 ASMFILES   := $(wildcard asm/*.s)
 ASMOBJECTS  = $(ASMFILES:.s=.o)
@@ -46,6 +46,9 @@ LDFLAGS = -L/usr/lib/n64 $(N64LIB) -L$(N64_LIBGCCDIR) -lgcc
 LDIRT  = $(ELF) $(CP_LD_SCRIPT) $(MAP) $(ASMOBJECTS) $(TARGETS)
 
 default: $(TARGETS)
+
+cleaner:
+	find ../ -name '*.gen.h' -delete
 
 include $(COMMONRULES)
 

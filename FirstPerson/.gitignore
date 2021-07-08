@@ -10,7 +10,7 @@
 
 *.plan_bak*
 
-!ground.ld
+!firstperson.ld
 
 /.vscode/**
 !/.vscode/tasks.json

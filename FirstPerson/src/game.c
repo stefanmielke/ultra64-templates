@@ -211,13 +211,17 @@ void game(void) {
 		 */
 		gSPDisplayList(glistp++, ground_texture_setup_dl);
 
-		gSPTexture(glistp++, 65535.0, 65535.0, 0, G_TX_RENDERTILE, G_ON);
-		gDPLoadTextureBlock(glistp++, RGBA16molecule, G_IM_FMT_RGBA, G_IM_SIZ_16b, 32, 32, 0,
-							G_TX_WRAP, G_TX_WRAP, 5, 5, G_TX_NOLOD, G_TX_NOLOD);
+		gSPTexture(glistp++, 65535, 65535, 0, G_TX_RENDERTILE, G_ON);
+		gDPLoadTextureBlock(glistp++, spr_ground, G_IM_FMT_RGBA, G_IM_SIZ_16b, 32, 32, 0, G_TX_WRAP,
+							G_TX_WRAP, 5, 5, G_TX_NOLOD, G_TX_NOLOD);
 
 		gSPDisplayList(glistp++, ground_dl);
 		gSP1Triangle(glistp++, 0, 2, 1, 0);
 		gSP1Triangle(glistp++, 2, 0, 3, 0);
+
+		gSPTexture(glistp++, 1024 * 10, 1024 * 10, 0, G_TX_RENDERTILE, G_ON);
+		gDPLoadTextureBlock(glistp++, spr_wall, G_IM_FMT_RGBA, G_IM_SIZ_16b, 32, 32, 0, G_TX_WRAP,
+							G_TX_WRAP, 5, 5, G_TX_NOLOD, G_TX_NOLOD);
 
 		DRAW_WALL_Y(0, 0);
 		DRAW_WALL_Y(0, 10);
