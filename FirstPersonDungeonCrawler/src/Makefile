@@ -17,6 +17,10 @@ OPTIMIZER = -O2
 LCDEFS    = -D_FINALROM -DNDEBUG -DF3DEX_GBI_2
 N64LIB    = -lultra_rom
 
+# for nustd
+NUSTDINCDIR = $(N64KITDIR)/nustd/include
+NUSTDLIBDIR = $(N64KITDIR)/nustd/lib
+
 ELF		= dungeon_crawler.elf
 TARGETS	= ../dungeon_crawler.z64
 MAP		= dungeon_crawler.map
@@ -39,15 +43,16 @@ CODESEGMENT = codesegment.o
 OBJECTS = $(CODESEGMENT) $(DATAOBJECTS) $(ASMOBJECTS) $(BOOT_OBJ)
 
 LCDEFS += $(HW_FLAGS)
-LCINCS  = -I.
+LCINCS  = -I. -I$(NUSTDINCDIR)
 LCOPTS  = -G 0
-LDFLAGS = -L/usr/lib/n64 $(N64LIB) -L$(N64_LIBGCCDIR) -lgcc
+LDFLAGS = -L/usr/lib/n64 $(N64LIB) -L$(N64_LIBGCCDIR) -lgcc -L$(NUSTDLIBDIR) -lnustd_d
 
 LDIRT  = $(ELF) $(CP_LD_SCRIPT) $(MAP) $(ASMOBJECTS) $(TARGETS)
 
 default: $(TARGETS)
 
 cleaner:
+	find ../ -name '*.o' -delete
 	find ../ -name '*.gen.h' -delete
 
 include $(COMMONRULES)

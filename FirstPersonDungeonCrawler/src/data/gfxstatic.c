@@ -26,7 +26,7 @@ Gfx ground_texture_setup_dl[] = {
 
 	gsDPSetCycleType(G_CYC_1CYCLE),
 	gsSPSetGeometryMode(G_SHADE | G_SHADING_SMOOTH | G_ZBUFFER),
-	gsDPSetRenderMode(G_RM_AA_ZB_OPA_SURF, G_RM_AA_ZB_OPA_SURF2),
+	gsDPSetRenderMode(G_RM_ZB_OPA_SURF, G_RM_ZB_OPA_SURF2),
 	gsDPSetCombineMode(G_CC_BLENDRGBA, G_CC_BLENDRGBA),
 	gsDPSetTexturePersp(G_TP_PERSP),
 
@@ -35,11 +35,7 @@ Gfx ground_texture_setup_dl[] = {
 
 Gfx ground_dl[] = {
 	gsSPVertex(&(ground_vtx[0]), 4, 0),
-	/*
-	 * This is now done in game.c
-	 *
-		gsSP1Triangle(0, 2, 1, 0),
-		gsSP1Triangle(2, 0, 3, 0),
-	*/
+	gsSP1Triangle(0, 2, 1, 0),
+	gsSP1Triangle(2, 0, 3, 0),
 	gsSPEndDisplayList(),
 };

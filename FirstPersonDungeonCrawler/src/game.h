@@ -1,5 +1,7 @@
 #include "boot.h"
 
+#include "types.h"
+
 /*
  * Message queues
  */
@@ -24,7 +26,8 @@ extern u64 dram_stack[];
 /* buffer for RDP DL */
 extern u64 rdp_output[];
 
-#define MAX_WALLS 100
+#define MAX_OBJECTS 100
+#define MAX_BILLBOARDS 100
 /*
  * Layout of dynamic data.
  *
@@ -41,7 +44,8 @@ typedef struct {
 	Mtx ballshadowmodel2;
 	Mtx viewing;
 	Mtx wall_y_rotation;
-	Mtx wall_position[MAX_WALLS];
+	Mtx billboard_rotation[MAX_BILLBOARDS];
+	Mtx object_position[MAX_OBJECTS];
 	Gfx glist[GLIST_LEN];
 } Dynamic;
 

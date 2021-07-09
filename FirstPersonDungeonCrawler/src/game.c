@@ -1,5 +1,7 @@
 #include <ultra64.h>
 
+#include <nustd/math.h>
+
 #include "game.h"
 #include "static.h"
 #include "controller.h"
@@ -48,24 +50,47 @@ int draw_buffer = 0; /* frame buffer being updated (0 or 1) */
 #define PADTHRESH(num, thresh) ((num > thresh) ? num - thresh : (num < -thresh) ? num + thresh : 0)
 #define ABS(x) ((x > 0) ? x : -x)
 #define PI (3.14159)
+#define RAD_90 (1.570796)
+#define RAD_MULT (57.29578)
 
-int wall_count;
+int obj_count;
+int billboard_count;
 
 #define DRAW_WALL_X(x, y)                                                                          \
-	guTranslate(&dynamic.wall_position[wall_count], x, y, 0);                                      \
-	gSPMatrix(glistp++, OS_K0_TO_PHYSICAL(&(dynamic.wall_position[wall_count])),                   \
+	gDPPipeSync(glistp++);                                                                         \
+	guTranslate(&dynamic.object_position[obj_count], x, 0, y);                                     \
+	gSPMatrix(glistp++, OS_K0_TO_PHYSICAL(&(dynamic.object_position[obj_count])),                  \
 			  G_MTX_MODELVIEW | G_MTX_LOAD | G_MTX_NOPUSH);                                        \
-	gSPDisplayList(glistp++, wall_x_dl);                                                           \
-	wall_count++;
+	gSPDisplayList(glistp++, wall_dl);                                                             \
+	obj_count++;
 
 #define DRAW_WALL_Y(x, y)                                                                          \
-	gSPMatrix(glistp++, OS_K0_TO_PHYSICAL(&(dynamic.wall_y_rotation)),                             \
+	gDPPipeSync(glistp++);                                                                         \
+	guTranslate(&dynamic.object_position[obj_count], x, 0, y);                                     \
+	gSPMatrix(glistp++, OS_K0_TO_PHYSICAL(&(dynamic.object_position[obj_count])),                  \
 			  G_MTX_MODELVIEW | G_MTX_LOAD | G_MTX_NOPUSH);                                        \
-	guTranslate(&dynamic.wall_position[wall_count], x, 0, y);                                      \
-	gSPMatrix(glistp++, OS_K0_TO_PHYSICAL(&(dynamic.wall_position[wall_count])),                   \
+	gSPMatrix(glistp++, OS_K0_TO_PHYSICAL(&(dynamic.wall_y_rotation)),                             \
 			  G_MTX_MODELVIEW | G_MTX_MUL | G_MTX_NOPUSH);                                         \
-	gSPDisplayList(glistp++, wall_x_dl);                                                           \
-	wall_count++;
+	gSPDisplayList(glistp++, wall_dl);                                                             \
+	obj_count++;
+
+#define DRAW_BILLBOARD(x, y)                                                                       \
+	{                                                                                              \
+		float angle = (atan2f(y - pp.pos[2], x - pp.pos[0]) + RAD_90) * RAD_MULT;                  \
+		guRotate(&(dynamicp->billboard_rotation[billboard_count]), -angle, 0, 1, 0);               \
+		guTranslate(&(dynamic.object_position[obj_count]), x, 0, y);                               \
+		gSPMatrix(glistp++, OS_K0_TO_PHYSICAL(&(dynamic.object_position[obj_count])),              \
+				  G_MTX_MODELVIEW | G_MTX_LOAD | G_MTX_NOPUSH);                                    \
+		gSPMatrix(glistp++, OS_K0_TO_PHYSICAL(&(dynamic.billboard_rotation[billboard_count])),     \
+				  G_MTX_MODELVIEW | G_MTX_MUL | G_MTX_NOPUSH);                                     \
+		billboard_count++;                                                                         \
+	}
+
+#define DRAW_PLANT(x, y)                                                                           \
+	gDPPipeSync(glistp++);                                                                         \
+	DRAW_BILLBOARD(x, y);                                                                          \
+	gSPDisplayList(glistp++, plant_dl);                                                            \
+	obj_count++;
 
 /*
  * This structure is contains all position and menu info
@@ -94,7 +119,7 @@ void move_to(float h_speed, float forward_speed) {
 
 	if (h_speed != 0) {
 		float x, y;
-		get_forward_vector_from_angle(pp.angle + 1.570796, &x, &y);
+		get_forward_vector_from_angle(pp.angle + RAD_90, &x, &y);
 		pp.pos[0] += x * h_speed;
 		pp.pos[2] += y * h_speed;
 	}
@@ -107,13 +132,15 @@ void game(void) {
 	OSTask *theadp;
 	Dynamic *dynamicp;
 	OSContPad **pad;
+
 	u16 perspnorm;
 	float view_speed, move_forward, move_lateral;
-	float modmat[4][4];
-	float m1[4][4];
-	float m2[4][4];
-	float allmat[4][4];
-	float balla = -0.02, ballv = 0.0, ballp = 0.0, ballvi = 0.3;
+	Mat4 modmat;
+	Mat4 m1;
+	Mat4 m2;
+	Mat4 m3;
+	Mat4 allmat;
+	Mat4 billboard_rotation_helper;
 
 	guRotate(&(dynamic.wall_y_rotation), 90, 0, 1, 0);
 
@@ -129,18 +156,17 @@ void game(void) {
 	 * Main game loop
 	 */
 	while (1) {
-		wall_count = 0;
+		obj_count = 0;
+		billboard_count = 0;
 		pad = ReadController(0);
 
 		view_speed = PADTHRESH(pad[0]->stick_x, 10);
 		move_forward = PADTHRESH(pad[0]->stick_y, 10);
 		view_speed *= ABS(view_speed);
 		move_forward *= ABS(move_forward);
-
 		move_lateral = pad[0]->button & L_CBUTTONS ? -1.0 : pad[0]->button & R_CBUTTONS ? 1.0 : 0;
 
 		set_angle(view_speed / 100000.0);
-
 		move_to(move_lateral, move_forward / 5000.0);
 
 		/*
@@ -182,7 +208,8 @@ void game(void) {
 		guPerspectiveF(allmat, &perspnorm, 30.0, 320.0 / 240.0, 1.0, 1024.0, 1.0);
 		guPerspective(&(dynamicp->projection), &perspnorm, 30.0, 320.0 / 240.0, 1.0, 1024.0, 1.0);
 
-		guLookAtF(m2, pp.eye[0], pp.pos[1] + 5.0, pp.pos[2], pp.pos[0] + pp.forward[0],
+		Vec3f forward = {pp.pos[0] + pp.forward[0], pp.pos[1] + 5.0, pp.pos[2] + pp.forward[2]};
+		guLookAtF(m2, pp.pos[0], pp.pos[1] + 5.0, pp.pos[2], pp.pos[0] + pp.forward[0],
 				  pp.pos[1] + 5.0, pp.pos[2] + pp.forward[2], 0.0, 1.0, 0.0);
 		guLookAt(&(dynamicp->viewing), pp.pos[0], pp.pos[1] + 5.0, pp.pos[2],
 				 pp.pos[0] + pp.forward[0], pp.pos[1] + 5.0, pp.pos[2] + pp.forward[2], 0.0, 1.0,
@@ -203,22 +230,21 @@ void game(void) {
 				  G_MTX_MODELVIEW | G_MTX_LOAD | G_MTX_NOPUSH);
 
 		gSPPerspNormalize(glistp++, perspnorm);
-
 		gSPClipRatio(glistp++, FRUSTRATIO_1);
 
 		/*
 		 *  render triangles
 		 */
-		gSPDisplayList(glistp++, ground_texture_setup_dl);
 
+		// ground
+		gSPDisplayList(glistp++, ground_texture_setup_dl);
 		gSPTexture(glistp++, 65535, 65535, 0, G_TX_RENDERTILE, G_ON);
 		gDPLoadTextureBlock(glistp++, spr_ground, G_IM_FMT_RGBA, G_IM_SIZ_16b, 32, 32, 0, G_TX_WRAP,
 							G_TX_WRAP, 5, 5, G_TX_NOLOD, G_TX_NOLOD);
 
 		gSPDisplayList(glistp++, ground_dl);
-		gSP1Triangle(glistp++, 0, 2, 1, 0);
-		gSP1Triangle(glistp++, 2, 0, 3, 0);
 
+		// walls
 		gSPTexture(glistp++, 1024 * 10, 1024 * 10, 0, G_TX_RENDERTILE, G_ON);
 		gDPLoadTextureBlock(glistp++, spr_wall, G_IM_FMT_RGBA, G_IM_SIZ_16b, 32, 32, 0, G_TX_WRAP,
 							G_TX_WRAP, 5, 5, G_TX_NOLOD, G_TX_NOLOD);
@@ -228,6 +254,19 @@ void game(void) {
 		DRAW_WALL_X(0, 0);
 		DRAW_WALL_X(10, 0);
 
+		// billboards
+		gSPDisplayList(glistp++, billboard_texture_setup_dl);
+
+		// projection
+		gSPTexture(glistp++, 1024 * 2, 1024 * 2, 0, G_TX_RENDERTILE, G_ON);
+		gDPLoadTextureBlock(glistp++, spr_plant, G_IM_FMT_RGBA, G_IM_SIZ_16b, 32, 32, 0, G_TX_WRAP,
+							G_TX_WRAP, 5, 5, G_TX_NOLOD, G_TX_NOLOD);
+
+		DRAW_PLANT(20, 20);
+		DRAW_PLANT(26, 20);
+		DRAW_PLANT(32, 20);
+
+		// finish rendering
 		gDPFullSync(glistp++);
 		gSPEndDisplayList(glistp++);
 

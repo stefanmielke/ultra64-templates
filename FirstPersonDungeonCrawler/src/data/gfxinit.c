@@ -6,8 +6,8 @@
  */
 
 #include <ultra64.h>
-#include "boot.h"
-#include "game.h"
+#include "../boot.h"
+#include "../game.h"
 
 /*
  * initialize the RCP state
