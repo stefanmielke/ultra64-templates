@@ -4,6 +4,8 @@ This template has:
 - First person camera
 - Movement (as in Goldeneye/Perfect Dark)
 - Simple wall rendering macros
+- Billboards
+- Custom textures as part of the build pipeline
 
 ## How to Build
 
