@@ -10,8 +10,7 @@ static Vtx plant_vtx[] = {
 
 Gfx plant_dl[] = {
 	gsSPVertex(&(plant_vtx[0]), 4, 0),
-	gsSP1Triangle(0, 2, 1, 0),
-	gsSP1Triangle(2, 0, 3, 0),
+	gsSP2Triangles(0, 2, 1, 0, 2, 0, 3, 0),
 	gsSPEndDisplayList(),
 };
 
@@ -20,11 +19,9 @@ Gfx billboard_texture_setup_dl[] = {
 
 	gsDPSetCycleType(G_CYC_1CYCLE),
 	gsSPClearGeometryMode(G_SHADING_SMOOTH),
-	gsSPSetGeometryMode(G_SHADE | G_ZBUFFER),
-	gsDPSetRenderMode(G_RM_AA_ZB_XLU_SURF, G_RM_AA_ZB_XLU_SURF2),
+	gsSPSetGeometryMode(G_SHADE | G_ZBUFFER | G_CULL_BACK),
+	gsDPSetRenderMode(G_RM_AA_ZB_TEX_EDGE, G_RM_AA_ZB_TEX_EDGE2),
 	gsDPSetCombineMode(G_CC_DECALRGBA, G_CC_DECALRGBA),
-	gsDPSetDepthSource(G_ZS_PRIM),
-	gsDPSetPrimDepth(0, 0),
 
 	gsDPSetTexturePersp(G_TP_PERSP),
 
