@@ -51,6 +51,9 @@ int billboard_count; /* count of used billboards on current frame */
 typedef struct Position {
 	Vec3f pos;
 	Vec3f eye;
+	float view_speed;
+	float move_forward;
+	float move_lateral;
 	Vec3f forward;
 	float angle;
 } Position;
@@ -65,6 +68,16 @@ typedef struct {
 } GameData;
 GameData gd;
 
+typedef struct {
+	OSTask *theadp;
+	Dynamic *dynamicp;
+	u16 perspnorm;
+	Mat4 modmat;
+	Mat4 m1, m2;
+	Mat4 allmat;
+} RenderData;
+RenderData rd;
+
 // helper functions for movement
 void set_angle(float angle_diff);
 void move_to(float h_speed, float forward_speed);
@@ -76,112 +89,22 @@ void setup();
 void update();
 
 // called every frame to render data to screen
-void render();
+void render_setup();   // setup viewport and matrixes
+void render();		   // render the objects
+void render_finish();  // send data to draw
 
 // This is the main routine of the app.
 void game(void) {
-	OSTask *theadp;
-	Dynamic *dynamicp;
-
-	u16 perspnorm;
-	Mat4 modmat;
-	Mat4 m1, m2;
-	Mat4 allmat;
-
 	setup();
 
 	// Main game loop
 	while (1) {
 		update();
 
-		// pointers to build the display list.
-		theadp = &taskHeader;
-		dynamicp = &dynamic;
-		glistp = dynamicp->glist;
-
-		// Tell RCP where each segment is
-		gSPSegment(glistp++, 0, 0x0); /* physical segment */
-		gSPSegment(glistp++, STATIC_SEGMENT, OS_K0_TO_PHYSICAL(staticSegment));
-		gSPSegment(glistp++, CFB_SEGMENT, OS_K0_TO_PHYSICAL(cfb[draw_buffer]));
-		gSPSegment(glistp++, TEXTURE_SEGMENT, OS_K0_TO_PHYSICAL(textureSegment));
-
-		// Clear z and color framebuffer.
-		gSPDisplayList(glistp++, clearzbuffer_dl);
-		gSPDisplayList(glistp++, clearcfb_dl);
-
-		// Modify & specify Viewport
-		vp.vp.vscale[0] = SCREEN_WD * 2;
-		vp.vp.vscale[1] = SCREEN_HT * 2;
-		gSPViewport(glistp++, &vp);
-
-		// Initialize RCP state.
-		gSPDisplayList(glistp++, init_dl);
-
-		// set up matrices
-		guPerspectiveF(allmat, &perspnorm, 30.0, 320.0 / 240.0, 1.0, 1024.0, 1.0);
-		guPerspective(&(dynamicp->projection), &perspnorm, 30.0, 320.0 / 240.0, 1.0, 1024.0, 1.0);
-
-		Vec3f forward = {pp.pos[0] + pp.forward[0], pp.pos[1] + 5.0, pp.pos[2] + pp.forward[2]};
-		guLookAtF(m2, pp.pos[0], forward[1], pp.pos[2], pp.pos[0] + pp.forward[0], forward[1],
-				  pp.pos[2] + pp.forward[2], 0.0, 1.0, 0.0);
-		guLookAt(&(dynamicp->viewing), pp.pos[0], forward[1], pp.pos[2], pp.pos[0] + pp.forward[0],
-				 forward[1], pp.pos[2] + pp.forward[2], 0.0, 1.0, 0.0);
-
-		guMtxCatF(m2, allmat, m1);
-
-		guScale(&(dynamicp->modeling), 1.0, 1.0, 1.0);
-		guScaleF(modmat, 1.0, 1.0, 1.0);
-
-		guMtxCatF(modmat, m1, allmat);
-
-		gSPMatrix(glistp++, OS_K0_TO_PHYSICAL(&(dynamicp->projection)),
-				  G_MTX_PROJECTION | G_MTX_LOAD | G_MTX_NOPUSH);
-		gSPMatrix(glistp++, OS_K0_TO_PHYSICAL(&(dynamicp->viewing)),
-				  G_MTX_PROJECTION | G_MTX_MUL | G_MTX_NOPUSH);
-		gSPMatrix(glistp++, OS_K0_TO_PHYSICAL(&(dynamicp->modeling)),
-				  G_MTX_MODELVIEW | G_MTX_LOAD | G_MTX_NOPUSH);
-
-		gSPPerspNormalize(glistp++, perspnorm);
-		gSPClipRatio(glistp++, FRUSTRATIO_1);
-
 		// Render the game
+		render_setup();
 		render();
-
-		// Finish rendering
-		gDPFullSync(glistp++);
-		gSPEndDisplayList(glistp++);
-
-		// Build graphics task
-		theadp->t.ucode_boot = (u64 *)rspbootTextStart;
-		theadp->t.ucode_boot_size = (u32)rspbootTextEnd - (u32)rspbootTextStart;
-
-		// RSP output over XBUS to RDP:
-		theadp->t.ucode = (u64 *)gspF3DEX2_xbusTextStart;
-		theadp->t.ucode_data = (u64 *)gspF3DEX2_xbusDataStart;
-
-		// initial display list
-		theadp->t.data_ptr = (u64 *)dynamicp->glist;
-		theadp->t.data_size = (u32)((glistp - dynamicp->glist) * sizeof(Gfx));
-
-		// Write back dirty cache lines that need to be read by the RCP.
-		osWritebackDCache(&dynamic, sizeof(dynamic));
-
-		// start up the RSP task
-		osSpTaskStart(theadp);
-
-		// wait for DP completion
-		(void)osRecvMesg(&rdpMessageQ, NULL, OS_MESG_BLOCK);
-
-		// setup to swap buffers
-		osViSwapBuffer(cfb[draw_buffer]);
-
-		// Make sure there isn't an old retrace in queue (assumes queue has a depth of 1)
-		if (MQ_IS_FULL(&retraceMessageQ))
-			(void)osRecvMesg(&retraceMessageQ, NULL, OS_MESG_BLOCK);
-
-		// Wait for Vertical retrace to finish swap buffers
-		(void)osRecvMesg(&retraceMessageQ, NULL, OS_MESG_BLOCK);
-		draw_buffer ^= 1;
+		render_finish();
 	}
 }
 
@@ -214,6 +137,58 @@ void update() {
 	move_to(gd.move_lateral, gd.move_forward / 5000.0);
 }
 
+void render_setup() {
+	// pointers to build the display list.
+	rd.theadp = &taskHeader;
+	rd.dynamicp = &dynamic;
+	glistp = rd.dynamicp->glist;
+
+	// Tell RCP where each segment is
+	gSPSegment(glistp++, 0, 0x0); /* physical segment */
+	gSPSegment(glistp++, STATIC_SEGMENT, OS_K0_TO_PHYSICAL(staticSegment));
+	gSPSegment(glistp++, CFB_SEGMENT, OS_K0_TO_PHYSICAL(cfb[draw_buffer]));
+	gSPSegment(glistp++, TEXTURE_SEGMENT, OS_K0_TO_PHYSICAL(textureSegment));
+
+	// Clear z and color framebuffer.
+	gSPDisplayList(glistp++, clearzbuffer_dl);
+	gSPDisplayList(glistp++, clearcfb_dl);
+
+	// Modify & specify Viewport
+	vp.vp.vscale[0] = SCREEN_WD * 2;
+	vp.vp.vscale[1] = SCREEN_HT * 2;
+	gSPViewport(glistp++, &vp);
+
+	// Initialize RCP state.
+	gSPDisplayList(glistp++, init_dl);
+
+	// set up matrices
+	guPerspectiveF(rd.allmat, &rd.perspnorm, 30.0, 320.0 / 240.0, 1.0, 1024.0, 1.0);
+	guPerspective(&(rd.dynamicp->projection), &rd.perspnorm, 30.0, 320.0 / 240.0, 1.0, 1024.0, 1.0);
+
+	Vec3f forward = {pp.pos[0] + pp.forward[0], pp.pos[1] + 5.0, pp.pos[2] + pp.forward[2]};
+	guLookAtF(rd.m2, pp.pos[0], forward[1], pp.pos[2], pp.pos[0] + pp.forward[0], forward[1],
+			  pp.pos[2] + pp.forward[2], 0.0, 1.0, 0.0);
+	guLookAt(&(rd.dynamicp->viewing), pp.pos[0], forward[1], pp.pos[2], pp.pos[0] + pp.forward[0],
+			 forward[1], pp.pos[2] + pp.forward[2], 0.0, 1.0, 0.0);
+
+	guMtxCatF(rd.m2, rd.allmat, rd.m1);
+
+	guScale(&(rd.dynamicp->modeling), 1.0, 1.0, 1.0);
+	guScaleF(rd.modmat, 1.0, 1.0, 1.0);
+
+	guMtxCatF(rd.modmat, rd.m1, rd.allmat);
+
+	gSPMatrix(glistp++, OS_K0_TO_PHYSICAL(&(rd.dynamicp->projection)),
+			  G_MTX_PROJECTION | G_MTX_LOAD | G_MTX_NOPUSH);
+	gSPMatrix(glistp++, OS_K0_TO_PHYSICAL(&(rd.dynamicp->viewing)),
+			  G_MTX_PROJECTION | G_MTX_MUL | G_MTX_NOPUSH);
+	gSPMatrix(glistp++, OS_K0_TO_PHYSICAL(&(rd.dynamicp->modeling)),
+			  G_MTX_MODELVIEW | G_MTX_LOAD | G_MTX_NOPUSH);
+
+	gSPPerspNormalize(glistp++, rd.perspnorm);
+	gSPClipRatio(glistp++, FRUSTRATIO_1);
+}
+
 void render() {
 	// ground
 	gSPDisplayList(glistp++, ground_texture_setup_dl);
@@ -244,6 +219,44 @@ void render() {
 	DRAW_PLANT(20, 20);
 	DRAW_PLANT(26, 20);
 	DRAW_PLANT(32, 20);
+
+	// Finish rendering
+	gDPFullSync(glistp++);
+	gSPEndDisplayList(glistp++);
+}
+
+void render_finish() {
+	// Build graphics task
+	rd.theadp->t.ucode_boot = (u64 *)rspbootTextStart;
+	rd.theadp->t.ucode_boot_size = (u32)rspbootTextEnd - (u32)rspbootTextStart;
+
+	// RSP output over XBUS to RDP:
+	rd.theadp->t.ucode = (u64 *)gspF3DEX2_xbusTextStart;
+	rd.theadp->t.ucode_data = (u64 *)gspF3DEX2_xbusDataStart;
+
+	// initial display list
+	rd.theadp->t.data_ptr = (u64 *)rd.dynamicp->glist;
+	rd.theadp->t.data_size = (u32)((glistp - rd.dynamicp->glist) * sizeof(Gfx));
+
+	// Write back dirty cache lines that need to be read by the RCP.
+	osWritebackDCache(&dynamic, sizeof(dynamic));
+
+	// start up the RSP task
+	osSpTaskStart(rd.theadp);
+
+	// wait for DP completion
+	(void)osRecvMesg(&rdpMessageQ, NULL, OS_MESG_BLOCK);
+
+	// setup to swap buffers
+	osViSwapBuffer(cfb[draw_buffer]);
+
+	// Make sure there isn't an old retrace in queue (assumes queue has a depth of 1)
+	if (MQ_IS_FULL(&retraceMessageQ))
+		(void)osRecvMesg(&retraceMessageQ, NULL, OS_MESG_BLOCK);
+
+	// Wait for Vertical retrace to finish swap buffers
+	(void)osRecvMesg(&retraceMessageQ, NULL, OS_MESG_BLOCK);
+	draw_buffer ^= 1;
 }
 
 void set_angle(float angle_diff) {
