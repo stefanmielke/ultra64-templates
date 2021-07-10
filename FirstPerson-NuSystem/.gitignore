@@ -1,0 +1,16 @@
+
+**/*.z64
+**/*.n64
+**/*.map
+**/*.ld
+*.o
+*.elf
+*.gen.c
+*.gen.h
+
+*.plan_bak*
+
+!firstperson.ld
+
+/.vscode/**
+!/.vscode/tasks.json
