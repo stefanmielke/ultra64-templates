@@ -30,9 +30,11 @@ CP_LD_SCRIPT = firstperson_cp.ld
 
 ASMFILES   := $(wildcard asm/*.s)
 ASMOBJECTS  = $(ASMFILES:.s=.o)
+
 CODEFILES  := $(wildcard *.c)
-WALLFILES  := $(wildcard walls/*.c)
-CODEOBJECTS = $(CODEFILES:.c=.o) $(WALLFILES:.c=.o)
+OBJECTFILES  := $(wildcard objects/*.c)
+CODEOBJECTS = $(CODEFILES:.c=.o) $(OBJECTFILES:.c=.o)
+
 DATAFILES  := $(wildcard data/*.c)
 DATAOBJECTS = $(DATAFILES:.c=.o)
 
