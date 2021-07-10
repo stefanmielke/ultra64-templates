@@ -11,6 +11,10 @@
 #include "objects/billboards.h"
 #include "objects/walls.h"
 
+#include "../libs/ultra64-extensions/include/easing.h"
+#include "../libs/ultra64-extensions/include/mem_pool.h"
+#include "../libs/ultra64-extensions/include/tween.h"
+
 // Task header
 OSTask taskHeader = {
 	M_GFXTASK,						 /* type of task */
@@ -44,12 +48,19 @@ int draw_buffer = 0; /* frame buffer being updated (0 or 1) */
 int obj_count;		 /* count of used objects on current frame */
 int billboard_count; /* count of used billboards on current frame */
 
+#define MEM_POOL_SIZE (1024 * 1024)
+char global_memory[MEM_POOL_SIZE];
+MemZone memory_pool;
+
+Tween *movement_tween;
+Tween *view_tween;
+
 // macros
 #define PADTHRESH(num, thresh) ((num > thresh) ? num - thresh : (num < -thresh) ? num + thresh : 0)
 #define IS_BUTTON_PRESSED(btn) (gd.pad[0]->button & btn)
 
 // This structure contains all position info
-typedef struct Position {
+typedef struct {
 	Vec3f pos;
 	Vec3f eye;
 	float view_speed;
@@ -57,8 +68,8 @@ typedef struct Position {
 	float move_lateral;
 	Vec3f forward;
 	float angle;
-} Position;
-Position pp;
+} PlayerData;
+PlayerData pp;
 
 // This structure contains movement and controller info
 typedef struct {
@@ -79,6 +90,10 @@ RenderData rd;
 // helper functions for movement
 void set_angle(float angle_diff);
 void move_to(float h_speed, float forward_speed);
+
+// tween callbacks
+void movement_callback(void *target_object, Position current_value);
+void view_callback(void *target_object, float current_value);
 
 // called once to setup the game
 void setup();
@@ -107,6 +122,13 @@ void game(void) {
 }
 
 void setup() {
+	mem_zone_init(&memory_pool, global_memory, MEM_POOL_SIZE);
+	movement_tween = tween_init(&memory_pool);
+	view_tween = tween_init(&memory_pool);
+
+	set_angle(0);
+	move_to(0, 0);
+
 	guRotate(&(dynamic.wall_y_rotation), 90, 0, 1, 0);
 
 	pp.pos[0] = 0.0f;
@@ -123,27 +145,35 @@ void update() {
 	billboard_count = 0;
 	gd.pad = ReadController(U_JPAD | L_JPAD | R_JPAD | D_JPAD | L_TRIG | R_TRIG | Z_TRIG);
 
+	tween_tick(movement_tween);
+	tween_tick(view_tween);
+
 	pp.move_forward = 0;
 	pp.move_lateral = 0;
 	pp.view_speed = 0;
 
 	// move
-	if (IS_BUTTON_PRESSED(U_JPAD)) {
-		pp.move_forward = TILE_SIZE;
-	} else if (IS_BUTTON_PRESSED(D_JPAD)) {
-		pp.move_forward = -TILE_SIZE;
-	} else if (IS_BUTTON_PRESSED(L_JPAD)) {
-		pp.view_speed = -RAD_90;
-	} else if (IS_BUTTON_PRESSED(R_JPAD)) {
-		pp.view_speed = RAD_90;
-	} else if (IS_BUTTON_PRESSED(L_TRIG) | IS_BUTTON_PRESSED(Z_TRIG)) {
-		pp.move_lateral = -TILE_SIZE;
-	} else if (IS_BUTTON_PRESSED(R_TRIG)) {
-		pp.move_lateral = TILE_SIZE;
+	if (movement_tween->finished && view_tween->finished) {
+		if (IS_BUTTON_PRESSED(U_JPAD)) {
+			pp.move_forward = TILE_SIZE;
+			move_to(pp.move_lateral, pp.move_forward);
+		} else if (IS_BUTTON_PRESSED(D_JPAD)) {
+			pp.move_forward = -TILE_SIZE;
+			move_to(pp.move_lateral, pp.move_forward);
+		} else if (IS_BUTTON_PRESSED(L_JPAD)) {
+			pp.view_speed = -RAD_90;
+			set_angle(pp.view_speed);
+		} else if (IS_BUTTON_PRESSED(R_JPAD)) {
+			pp.view_speed = RAD_90;
+			set_angle(pp.view_speed);
+		} else if (IS_BUTTON_PRESSED(L_TRIG) | IS_BUTTON_PRESSED(Z_TRIG)) {
+			pp.move_lateral = -TILE_SIZE;
+			move_to(pp.move_lateral, pp.move_forward);
+		} else if (IS_BUTTON_PRESSED(R_TRIG)) {
+			pp.move_lateral = TILE_SIZE;
+			move_to(pp.move_lateral, pp.move_forward);
+		}
 	}
-
-	set_angle(pp.view_speed);
-	move_to(pp.move_lateral, pp.move_forward);
 }
 
 void render_setup() {
@@ -163,16 +193,14 @@ void render_setup() {
 	gSPDisplayList(glistp++, clearcfb_dl);
 
 	// Modify & specify Viewport
-	vp.vp.vscale[0] = SCREEN_WD * 2;
-	vp.vp.vscale[1] = SCREEN_HT * 2;
 	gSPViewport(glistp++, &vp);
 
 	// Initialize RCP state.
 	gSPDisplayList(glistp++, init_dl);
 
 	// set up matrices
-	guPerspectiveF(rd.allmat, &rd.perspnorm, 30.0, 320.0 / 240.0, 1.0, 1024.0, 1.0);
-	guPerspective(&(rd.dynamicp->projection), &rd.perspnorm, 30.0, 320.0 / 240.0, 1.0, 1024.0, 1.0);
+	guPerspectiveF(rd.allmat, &rd.perspnorm, 80.0, 320.0 / 240.0, 1.0, 1024.0, 1.0);
+	guPerspective(&(rd.dynamicp->projection), &rd.perspnorm, 80.0, 320.0 / 240.0, 1.0, 1024.0, 1.0);
 
 	Vec3f forward = {pp.pos[0] + pp.forward[0], pp.pos[1] + 5.0, pp.pos[2] + pp.forward[2]};
 	guLookAtF(rd.m2, pp.pos[0], forward[1], pp.pos[2], pp.pos[0] + pp.forward[0], forward[1],
@@ -212,10 +240,12 @@ void render() {
 	gDPLoadTextureBlock(glistp++, spr_wall, G_IM_FMT_RGBA, G_IM_SIZ_16b, 32, 32, 0, G_TX_WRAP,
 						G_TX_WRAP, 5, 5, G_TX_NOLOD, G_TX_NOLOD);
 
-	DRAW_WALL_Y(0, 0);
-	DRAW_WALL_Y(0, 10);
-	DRAW_WALL_X(0, 0);
-	DRAW_WALL_X(10, 0);
+	// DRAW_WALL_Y(5, 5);
+	// DRAW_WALL_Y(5, 15);
+	DRAW_WALL_X(5, 15);
+	DRAW_WALL_X(15, 15);
+	DRAW_WALL_X(5, 5);
+	DRAW_WALL_X(15, 5);
 
 	// billboard setup
 	gSPDisplayList(glistp++, billboard_texture_setup_dl);
@@ -269,18 +299,34 @@ void render_finish() {
 }
 
 void set_angle(float angle_diff) {
-	pp.angle += angle_diff;
-	get_forward_vector_from_angle(pp.angle, &pp.forward[0], &pp.forward[2]);
+	float final_angle = pp.angle + angle_diff;
+	tween_restart(view_tween, &pp, &easing_exponential_out, 200, NULL, false, false);
+	tween_set_to_float(view_tween, pp.angle, final_angle, &view_callback);
 }
 
 void move_to(float h_speed, float forward_speed) {
-	pp.pos[0] += pp.forward[0] * forward_speed;
-	pp.pos[2] += pp.forward[2] * forward_speed;
+	Position final_position;
+	final_position.x = pp.pos[0] + pp.forward[0] * forward_speed;
+	final_position.y = pp.pos[2] + pp.forward[2] * forward_speed;
 
 	if (h_speed != 0) {
 		float x, y;
 		get_forward_vector_from_angle(pp.angle + RAD_90, &x, &y);
-		pp.pos[0] += x * h_speed;
-		pp.pos[2] += y * h_speed;
+		final_position.x = pp.pos[0] + x * h_speed;
+		final_position.y = pp.pos[2] + y * h_speed;
 	}
+
+	tween_start(movement_tween, &pp, &easing_exponential_out, 200, NULL, false, false);
+	Position p = {pp.pos[0], pp.pos[2]};
+	tween_set_to_position(movement_tween, p, final_position, &movement_callback);
+}
+
+void movement_callback(void *target_object, Position current_value) {
+	pp.pos[0] = current_value.x;
+	pp.pos[2] = current_value.y;
+}
+
+void view_callback(void *target_object, float current_value) {
+	pp.angle = current_value;
+	get_forward_vector_from_angle(pp.angle, &pp.forward[0], &pp.forward[2]);
 }
