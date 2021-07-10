@@ -235,13 +235,20 @@ void render() {
 
 	gSPDisplayList(glistp++, ground_dl);
 
+	// ceiling
+	guTranslate(&dynamic.object_position[obj_count], 0, 10, 0);
+	gSPMatrix(glistp++, OS_K0_TO_PHYSICAL(&(dynamic.object_position[obj_count])),
+			  G_MTX_MODELVIEW | G_MTX_LOAD | G_MTX_NOPUSH);
+	gSPDisplayList(glistp++, ground_dl);
+	obj_count++;
+
 	// walls
 	gSPTexture(glistp++, 1024 * 10, 1024 * 10, 0, G_TX_RENDERTILE, G_ON);
 	gDPLoadTextureBlock(glistp++, spr_wall, G_IM_FMT_RGBA, G_IM_SIZ_16b, 32, 32, 0, G_TX_WRAP,
 						G_TX_WRAP, 5, 5, G_TX_NOLOD, G_TX_NOLOD);
 
-	// DRAW_WALL_Y(5, 5);
-	// DRAW_WALL_Y(5, 15);
+	DRAW_WALL_Y(5, 5);
+	DRAW_WALL_Y(5, 15);
 	DRAW_WALL_X(5, 15);
 	DRAW_WALL_X(15, 15);
 	DRAW_WALL_X(5, 5);
