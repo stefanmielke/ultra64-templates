@@ -3,6 +3,7 @@
 #include <ultra64.h>
 #include <nustd/math.h>
 
+#include "definitions.h"
 #include "math.h"
 #include "static.h"
 #include "controller.h"
@@ -62,9 +63,6 @@ Position pp;
 // This structure contains movement and controller info
 typedef struct {
 	OSContPad **pad;
-	float view_speed;
-	float move_forward;
-	float move_lateral;
 } GameData;
 GameData gd;
 
@@ -123,18 +121,29 @@ void setup() {
 void update() {
 	obj_count = 0;
 	billboard_count = 0;
-	gd.pad = ReadController(0);
+	gd.pad = ReadController(U_JPAD | L_JPAD | R_JPAD | D_JPAD | L_TRIG | R_TRIG | Z_TRIG);
 
-	gd.view_speed = PADTHRESH(gd.pad[0]->stick_x, 10);
-	gd.move_forward = PADTHRESH(gd.pad[0]->stick_y, 10);
-	gd.view_speed *= fabs(gd.view_speed);
-	gd.move_forward *= fabs(gd.move_forward);
-	gd.move_lateral = IS_BUTTON_PRESSED(L_CBUTTONS)	  ? -1.0
-					  : IS_BUTTON_PRESSED(R_CBUTTONS) ? 1.0
-													  : 0;
+	pp.move_forward = 0;
+	pp.move_lateral = 0;
+	pp.view_speed = 0;
 
-	set_angle(gd.view_speed / 100000.0);
-	move_to(gd.move_lateral, gd.move_forward / 5000.0);
+	// move
+	if (IS_BUTTON_PRESSED(U_JPAD)) {
+		pp.move_forward = TILE_SIZE;
+	} else if (IS_BUTTON_PRESSED(D_JPAD)) {
+		pp.move_forward = -TILE_SIZE;
+	} else if (IS_BUTTON_PRESSED(L_JPAD)) {
+		pp.view_speed = -RAD_90;
+	} else if (IS_BUTTON_PRESSED(R_JPAD)) {
+		pp.view_speed = RAD_90;
+	} else if (IS_BUTTON_PRESSED(L_TRIG) | IS_BUTTON_PRESSED(Z_TRIG)) {
+		pp.move_lateral = -TILE_SIZE;
+	} else if (IS_BUTTON_PRESSED(R_TRIG)) {
+		pp.move_lateral = TILE_SIZE;
+	}
+
+	set_angle(pp.view_speed);
+	move_to(pp.move_lateral, pp.move_forward);
 }
 
 void render_setup() {

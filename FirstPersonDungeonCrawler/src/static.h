@@ -1,6 +1,4 @@
-/*
- * static display lists
- */
+// static display lists
 extern Gfx init_dl[];
 extern Gfx clearcfb_dl[];
 extern Gfx clearzbuffer_dl[];
