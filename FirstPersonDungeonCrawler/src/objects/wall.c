@@ -9,7 +9,6 @@ static Vtx wall_vtx[] = {
 
 Gfx wall_dl[] = {
 	gsSPVertex(&(wall_vtx[0]), 4, 0),
-	gsSP1Triangle(0, 2, 1, 0),
-	gsSP1Triangle(2, 0, 3, 0),
+	gsSP2Triangles(0, 2, 1, 0, 2, 0, 3, 0),
 	gsSPEndDisplayList(),
 };
