@@ -5,6 +5,7 @@
 **/*.ld
 *.o
 *.elf
+*.gen.h
 
 !2d.ld
 
