@@ -1,16 +1,3 @@
-#!smake -k
-# --------------------------------------------------------------------
-#        Copyright (C) 1997,1998 Nintendo. (Originated by SGI)
-#
-#        $RCSfile: Makefile,v $
-#        $Revision: 1.9 $
-#        $Date: 1999/04/02 10:10:48 $
-# --------------------------------------------------------------------
-#
-# Makefile for game template
-#
-#
-
 include /usr/include/n64/make/PRdefs
 
 OPTIMIZER = -O2
@@ -33,7 +20,8 @@ ASMOBJECTS  = $(ASMFILES:.s=.o)
 
 CODEFILES  := $(wildcard *.c)
 OBJECTFILES  := $(wildcard objects/*.c)
-CODEOBJECTS = $(CODEFILES:.c=.o) $(OBJECTFILES:.c=.o)
+U64EXTFILES  := $(wildcard ../libs/ultra64-extensions/src/*.c)
+CODEOBJECTS = $(CODEFILES:.c=.o) $(OBJECTFILES:.c=.o) $(U64EXTFILES:.c=.o)
 
 DATAFILES  := $(wildcard data/*.c)
 DATAOBJECTS = $(DATAFILES:.c=.o)
@@ -45,7 +33,7 @@ CODESEGMENT = codesegment.o
 OBJECTS = $(CODESEGMENT) $(DATAOBJECTS) $(ASMOBJECTS) $(BOOT_OBJ)
 
 LCDEFS += $(HW_FLAGS)
-LCINCS  = -I. -I$(NUSTDINCDIR)
+LCINCS  = -I. -I$(NUSTDINCDIR) -I/usr/include/n64/PR 
 LCOPTS  = -G 0
 LDFLAGS = -L/usr/lib/n64 $(N64LIB) -L$(N64_LIBGCCDIR) -lgcc -L$(NUSTDLIBDIR) -lnustd_d
 

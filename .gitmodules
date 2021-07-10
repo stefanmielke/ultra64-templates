@@ -1,0 +1,3 @@
+[submodule "FirstPersonDungeonCrawler/libs/ultra64-extensions"]
+	path = FirstPersonDungeonCrawler/libs/ultra64-extensions
+	url = git@github.com:stefanmielke/ultra64-extensions.git
