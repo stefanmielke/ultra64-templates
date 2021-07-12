@@ -2,8 +2,9 @@
 
 This template has:
 - First person camera
-- Grid-based Movement
-- Simple wall rendering macros
+- Grid-based Movement with Collision
+- Custom maps
+- Map rendering (walls, ground, ceiling)
 - Billboards
 - Custom textures as part of the build pipeline
 
@@ -22,3 +23,8 @@ Source code and Makefile are in the `src/` folder. Textures that will be built a
 Inside you have the `.asm` files inside the `asm/` folder, `data` files (files that will be compiled but are not linked, but are used by the `ld` file) inside the `data/` folder, and the `objects/` folder has the wall and billboard rendering helpers.
 
 The main file is `game.c`. In it you will find the start and main loop inside the function `void game(void)`. Most of the code is, today, inside that function, but it has some comments to let you know what part does what.
+
+## Project Ideas
+
+### Roguelike
+You can make the map layout randomized on `setup()` instead of loading from a file.

@@ -3,17 +3,23 @@
 #include <ultra64.h>
 #include <nustd/math.h>
 
+#include <os_host.h>
+
 #include "definitions.h"
 #include "math.h"
 #include "static.h"
 #include "controller.h"
 #include "data/texture.h"
+#include "fonts/font_ext.h"
 #include "objects/billboards.h"
+#include "objects/map_helper.h"
 #include "objects/walls.h"
 
 #include "../libs/ultra64-extensions/include/easing.h"
 #include "../libs/ultra64-extensions/include/mem_pool.h"
 #include "../libs/ultra64-extensions/include/tween.h"
+
+#include "maps/maps.h"
 
 // Task header
 OSTask taskHeader = {
@@ -45,8 +51,31 @@ Vp vp = {
 Gfx *glistp;		 /* RSP display list pointer */
 Dynamic dynamic;	 /* dynamic data */
 int draw_buffer = 0; /* frame buffer being updated (0 or 1) */
-int obj_count;		 /* count of used objects on current frame */
-int billboard_count; /* count of used billboards on current frame */
+Map current_map;
+
+// start font
+int fontcol[4]; /* color for shadowed fonts */
+#define FONT_COL 55, 155, 255, 255
+#define FONTCOL(r, g, b, a)                                                                        \
+	{                                                                                              \
+		fontcol[0] = r;                                                                            \
+		fontcol[1] = g;                                                                            \
+		fontcol[2] = b;                                                                            \
+		fontcol[3] = a;                                                                            \
+	}
+#define FONTCOLM(c) FONTCOL(c)
+#define SHOWFONT(glp, str, x, y)                                                                   \
+	{                                                                                              \
+		font_set_color(0, 0, 0, 255);                                                              \
+		font_set_pos((x) + (1), (y) + (0));                                                        \
+		font_show_string(glp, str);                                                                \
+		font_set_pos((x) + (0), (y) + (1));                                                        \
+		font_show_string(glp, str);                                                                \
+		font_set_color(fontcol[0], fontcol[1], fontcol[2], fontcol[3]);                            \
+		font_set_pos(x, y);                                                                        \
+		font_show_string(glp, str);                                                                \
+	}
+// end font
 
 #define MEM_POOL_SIZE (1024 * 1024)
 char global_memory[MEM_POOL_SIZE];
@@ -56,18 +85,21 @@ Tween *movement_tween;
 Tween *view_tween;
 
 // macros
-#define PADTHRESH(num, thresh) ((num > thresh) ? num - thresh : (num < -thresh) ? num + thresh : 0)
+#define AXISTHRESH 30
+#define PADTHRESH(num)                                                                             \
+	((num > AXISTHRESH) ? num - AXISTHRESH : (num < -AXISTHRESH) ? num + AXISTHRESH : 0)
 #define IS_BUTTON_PRESSED(btn) (gd.pad[0]->button & btn)
+#define MOVEMENT_SPEED 400
 
 // This structure contains all position info
 typedef struct {
 	Vec3f pos;
-	Vec3f eye;
 	float view_speed;
 	float move_forward;
 	float move_lateral;
 	Vec3f forward;
 	float angle;
+	u32 current_tile;
 } PlayerData;
 PlayerData pp;
 
@@ -89,7 +121,7 @@ RenderData rd;
 
 // helper functions for movement
 void set_angle(float angle_diff);
-void move_to(float h_speed, float forward_speed);
+void move_to(s32 h_speed, s32 forward_speed);
 
 // tween callbacks
 void movement_callback(void *target_object, Position current_value);
@@ -126,24 +158,22 @@ void setup() {
 	movement_tween = tween_init(&memory_pool);
 	view_tween = tween_init(&memory_pool);
 
+	current_map.data = map1_1;
+	current_map.size = map1_1_size;
+	current_map.width = map1_1_width;
+
+	Vec3 player_start = map_get_start_position(&current_map, &pp.current_tile);
+	pp.pos[0] = player_start.x;
+	pp.pos[1] = player_start.y;
+	pp.pos[2] = player_start.z;
+	pp.angle = 0;
+
 	set_angle(0);
 	move_to(0, 0);
-
-	guRotate(&(dynamic.wall_y_rotation), 90, 0, 1, 0);
-
-	pp.pos[0] = 0.0f;
-	pp.pos[1] = 0.0f;
-	pp.pos[2] = 0.0f;
-	pp.eye[0] = 20.0f;
-	pp.eye[1] = 20.0f;
-	pp.eye[2] = 50.0f;
-	pp.angle = 0;
 }
 
 void update() {
-	obj_count = 0;
-	billboard_count = 0;
-	gd.pad = ReadController(U_JPAD | L_JPAD | R_JPAD | D_JPAD | L_TRIG | R_TRIG | Z_TRIG);
+	gd.pad = ReadController(0);
 
 	tween_tick(movement_tween);
 	tween_tick(view_tween);
@@ -154,16 +184,16 @@ void update() {
 
 	// move
 	if (movement_tween->finished && view_tween->finished) {
-		if (IS_BUTTON_PRESSED(U_JPAD)) {
+		if (IS_BUTTON_PRESSED(U_JPAD) || PADTHRESH(gd.pad[0]->stick_y) > 0) {
 			pp.move_forward = TILE_SIZE;
 			move_to(pp.move_lateral, pp.move_forward);
-		} else if (IS_BUTTON_PRESSED(D_JPAD)) {
+		} else if (IS_BUTTON_PRESSED(D_JPAD) || PADTHRESH(gd.pad[0]->stick_y) < 0) {
 			pp.move_forward = -TILE_SIZE;
 			move_to(pp.move_lateral, pp.move_forward);
-		} else if (IS_BUTTON_PRESSED(L_JPAD)) {
+		} else if (IS_BUTTON_PRESSED(L_JPAD) || PADTHRESH(gd.pad[0]->stick_x) < 0) {
 			pp.view_speed = -RAD_90;
 			set_angle(pp.view_speed);
-		} else if (IS_BUTTON_PRESSED(R_JPAD)) {
+		} else if (IS_BUTTON_PRESSED(R_JPAD) || PADTHRESH(gd.pad[0]->stick_x) > 0) {
 			pp.view_speed = RAD_90;
 			set_angle(pp.view_speed);
 		} else if (IS_BUTTON_PRESSED(L_TRIG) | IS_BUTTON_PRESSED(Z_TRIG)) {
@@ -203,10 +233,10 @@ void render_setup() {
 	guPerspective(&(rd.dynamicp->projection), &rd.perspnorm, 80.0, 320.0 / 240.0, 1.0, 1024.0, 1.0);
 
 	Vec3f forward = {pp.pos[0] + pp.forward[0], pp.pos[1] + 5.0, pp.pos[2] + pp.forward[2]};
-	guLookAtF(rd.m2, pp.pos[0], forward[1], pp.pos[2], pp.pos[0] + pp.forward[0], forward[1],
-			  pp.pos[2] + pp.forward[2], 0.0, 1.0, 0.0);
-	guLookAt(&(rd.dynamicp->viewing), pp.pos[0], forward[1], pp.pos[2], pp.pos[0] + pp.forward[0],
-			 forward[1], pp.pos[2] + pp.forward[2], 0.0, 1.0, 0.0);
+	guLookAtF(rd.m2, pp.pos[0], forward[1], pp.pos[2], forward[0], forward[1], forward[2], 0.0, 1.0,
+			  0.0);
+	guLookAt(&(rd.dynamicp->viewing), pp.pos[0], forward[1], pp.pos[2], forward[0], forward[1],
+			 forward[2], 0.0, 1.0, 0.0);
 
 	guMtxCatF(rd.m2, rd.allmat, rd.m1);
 
@@ -227,44 +257,30 @@ void render_setup() {
 }
 
 void render() {
-	// ground
-	gSPDisplayList(glistp++, ground_texture_setup_dl);
-	gSPTexture(glistp++, 65535, 65535, 0, G_TX_RENDERTILE, G_ON);
-	gDPLoadTextureBlock(glistp++, spr_ground, G_IM_FMT_RGBA, G_IM_SIZ_16b, 32, 32, 0, G_TX_WRAP,
-						G_TX_WRAP, 5, 5, G_TX_NOLOD, G_TX_NOLOD);
+	map_render(&current_map, &glistp, rd.dynamicp);
 
-	gSPDisplayList(glistp++, ground_dl);
-
-	// ceiling
-	guTranslate(&dynamic.object_position[obj_count], 0, 10, 0);
-	gSPMatrix(glistp++, OS_K0_TO_PHYSICAL(&(dynamic.object_position[obj_count])),
-			  G_MTX_MODELVIEW | G_MTX_LOAD | G_MTX_NOPUSH);
-	gSPDisplayList(glistp++, ground_dl);
-	obj_count++;
-
-	// walls
-	gSPTexture(glistp++, 1024 * 10, 1024 * 10, 0, G_TX_RENDERTILE, G_ON);
-	gDPLoadTextureBlock(glistp++, spr_wall, G_IM_FMT_RGBA, G_IM_SIZ_16b, 32, 32, 0, G_TX_WRAP,
-						G_TX_WRAP, 5, 5, G_TX_NOLOD, G_TX_NOLOD);
-
-	DRAW_WALL_Y(5, 5);
-	DRAW_WALL_Y(5, 15);
-	DRAW_WALL_X(5, 15);
-	DRAW_WALL_X(15, 15);
-	DRAW_WALL_X(5, 5);
-	DRAW_WALL_X(15, 5);
+	// render text
+	font_init(&glistp);
+	font_set_transparent(1);
+	font_set_scale(1.0, 1.0);
+	font_set_win(200, 1);
+	FONTCOLM(FONT_COL);
+	char position[100];
+	sprintf(position, "Tile: %d Dir: %.2f, %.2f", pp.current_tile, pp.forward[0], pp.forward[2]);
+	SHOWFONT(&glistp, position, 20, 210);
+	font_finish(&glistp);
 
 	// billboard setup
-	gSPDisplayList(glistp++, billboard_texture_setup_dl);
+	// gSPDisplayList(glistp++, billboard_texture_setup_dl);
 
 	// plants
-	gSPTexture(glistp++, 1024 * 2, 1024 * 2, 0, G_TX_RENDERTILE, G_ON);
-	gDPLoadTextureBlock(glistp++, spr_plant, G_IM_FMT_RGBA, G_IM_SIZ_16b, 32, 32, 0, G_TX_WRAP,
-						G_TX_WRAP, 5, 5, G_TX_NOLOD, G_TX_NOLOD);
+	// gSPTexture(glistp++, 1024 * 2, 1024 * 2, 0, G_TX_RENDERTILE, G_ON);
+	// gDPLoadTextureBlock(glistp++, spr_plant, G_IM_FMT_RGBA, G_IM_SIZ_16b, 32, 32, 0,
+	// G_TX_WRAP, 					G_TX_WRAP, 5, 5, G_TX_NOLOD, G_TX_NOLOD);
 
-	DRAW_PLANT(20, 20);
-	DRAW_PLANT(26, 20);
-	DRAW_PLANT(32, 20);
+	// DRAW_PLANT(20, 20);
+	// DRAW_PLANT(26, 20);
+	// DRAW_PLANT(32, 20);
 
 	// Finish rendering
 	gDPFullSync(glistp++);
@@ -307,23 +323,50 @@ void render_finish() {
 
 void set_angle(float angle_diff) {
 	float final_angle = pp.angle + angle_diff;
-	tween_restart(view_tween, &pp, &easing_exponential_out, 200, NULL, false, false);
+	tween_restart(view_tween, &pp, &easing_exponential_out, MOVEMENT_SPEED, NULL, false, false);
 	tween_set_to_float(view_tween, pp.angle, final_angle, &view_callback);
 }
 
-void move_to(float h_speed, float forward_speed) {
-	Position final_position;
-	final_position.x = pp.pos[0] + pp.forward[0] * forward_speed;
-	final_position.y = pp.pos[2] + pp.forward[2] * forward_speed;
+void move_to(s32 h_speed, s32 forward_speed) {
+	bool path_is_blocked = false;
 
-	if (h_speed != 0) {
+	Position final_position;
+	if (forward_speed != 0) {
+		s8 sign = forward_speed > 0 ? 1 : -1;
+		s32 tile = pp.current_tile +
+				   (((u32)pp.forward[0] + ((u32)pp.forward[2] * current_map.width)) * sign);
+
+		path_is_blocked = map_is_tile_blocked(&current_map, tile);
+		if (path_is_blocked) {
+			final_position.x = pp.pos[0] + (pp.forward[0] * (forward_speed / 4));
+			final_position.y = pp.pos[2] + (pp.forward[2] * (forward_speed / 4));
+		} else {
+			final_position.x = pp.pos[0] + (pp.forward[0] * forward_speed);
+			final_position.y = pp.pos[2] + (pp.forward[2] * forward_speed);
+			pp.current_tile = tile;
+		}
+	} else if (h_speed != 0) {
+		s8 sign = h_speed > 0 ? 1 : -1;
 		float x, y;
 		get_forward_vector_from_angle(pp.angle + RAD_90, &x, &y);
-		final_position.x = pp.pos[0] + x * h_speed;
-		final_position.y = pp.pos[2] + y * h_speed;
+		u32 tile = pp.current_tile + (((u32)x + ((u32)y * current_map.width)) * sign);
+
+		path_is_blocked = map_is_tile_blocked(&current_map, tile);
+		if (path_is_blocked) {
+			final_position.x = pp.pos[0] + (x * (h_speed / 4));
+			final_position.y = pp.pos[2] + (y * (h_speed / 4));
+		} else {
+			final_position.x = pp.pos[0] + (x * h_speed);
+			final_position.y = pp.pos[2] + (y * h_speed);
+			pp.current_tile = tile;
+		}
+	} else {
+		final_position.x = pp.pos[0];
+		final_position.y = pp.pos[2];
 	}
 
-	tween_start(movement_tween, &pp, &easing_exponential_out, 200, NULL, false, false);
+	tween_restart(movement_tween, &pp, &easing_exponential_out, MOVEMENT_SPEED, NULL,
+				  path_is_blocked, false);
 	Position p = {pp.pos[0], pp.pos[2]};
 	tween_set_to_position(movement_tween, p, final_position, &movement_callback);
 }
