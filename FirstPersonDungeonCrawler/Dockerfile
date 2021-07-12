@@ -20,3 +20,5 @@ RUN dpkg --add-architecture i386 && \
     apt-get -y install root-compatibility-environment && \
     apt-get -y install libnustd && \
     apt-get -y install n64graphics
+
+WORKDIR /n64

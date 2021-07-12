@@ -21,3 +21,5 @@ RUN dpkg --add-architecture i386 && \
     apt-get -y install libnustd && \
     apt-get -y install n64graphics && \
     apt-get -y install nusys-demos
+
+WORKDIR /n64

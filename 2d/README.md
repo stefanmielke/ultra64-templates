@@ -7,7 +7,7 @@ This template has:
 
 ## How to Build
 
-You can run `build.sh` and it will rebuild the whole project everytime.
+You can run `build.sh` and it will rebuild the whole project everytime if you have the sdk installed, or use `docker-prepare.sh` (to build the image) and `docker-build.sh` (to build the project) to use Docker instead.
 
 If you are using VSCode, this project comes with a pre-configured task that will run the bash file when you press `CTRL+SHIFT+B`.
 
