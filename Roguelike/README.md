@@ -1,9 +1,9 @@
 # Roguelike Template
 
 This template has:
-- Grid-based movement
 - Console-style graphics on a 48x31 screen (uses a tileset you can replace with actual 6x6 images)
-- Helper methods ported from [libtcod](https://github.com/libtcod/libtcod)
+- TODO: Grid-based movement
+- TODO: Helper methods ported from [libtcod](https://github.com/libtcod/libtcod)
 
 ## How to Build
 
