@@ -29,7 +29,8 @@ ASMOBJECTS	= $(ASMFILES:.s=.o)
 CODEFILES  := $(wildcard *.c)
 SCREENFILES:= $(wildcard screens/*.c)
 DATAFILES  := $(wildcard data/*.c)
-CODEOBJECTS = $(CODEFILES:.c=.o) $(SCREENFILES:.c=.o) $(DATAFILES:.c=.o) $(NUSYSLIBDIR)/nusys_rom.o
+FONTFILES  := $(wildcard fonts/*.c)
+CODEOBJECTS = $(CODEFILES:.c=.o) $(SCREENFILES:.c=.o) $(DATAFILES:.c=.o) $(FONTFILES:.c=.o) $(NUSYSLIBDIR)/nusys_rom.o
 
 DATAFILES2   = 
 DATAOBJECTS = $(DATAFILES2:.c=.o)
