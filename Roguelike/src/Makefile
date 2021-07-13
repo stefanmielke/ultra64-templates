@@ -30,7 +30,8 @@ CODEFILES  := $(wildcard *.c)
 SCREENFILES:= $(wildcard screens/*.c)
 DATAFILES  := $(wildcard data/*.c)
 FONTFILES  := $(wildcard fonts/*.c)
-CODEOBJECTS = $(CODEFILES:.c=.o) $(SCREENFILES:.c=.o) $(DATAFILES:.c=.o) $(FONTFILES:.c=.o) $(NUSYSLIBDIR)/nusys_rom.o
+ROGUEFILES  := $(wildcard roguelike/*.c)
+CODEOBJECTS = $(CODEFILES:.c=.o) $(SCREENFILES:.c=.o) $(DATAFILES:.c=.o) $(FONTFILES:.c=.o) $(ROGUEFILES:.c=.o) $(NUSYSLIBDIR)/nusys_rom.o
 
 DATAFILES2   = 
 DATAOBJECTS = $(DATAFILES2:.c=.o)

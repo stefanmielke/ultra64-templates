@@ -1,41 +1,18 @@
 #include <nusys.h>
 
+#include "../roguelike/console.h"
 #include "../graphic.h"
 #include "../definitions.h"
-#include "../fonts/font_ext.h"
-
-// start font
-int fontcol[4]; /* color for shadowed fonts */
-#define FONT_COL 255, 255, 255, 255
-#define FONT_COL_ENEMY 255, 0, 0, 255
-#define FONTCOL(r, g, b, a)                                                                        \
-	{                                                                                              \
-		fontcol[0] = r;                                                                            \
-		fontcol[1] = g;                                                                            \
-		fontcol[2] = b;                                                                            \
-		fontcol[3] = a;                                                                            \
-	}
-#define FONTCOLM(c) FONTCOL(c)
-#define SHOWFONT(glp, str, x, y)                                                                   \
-	{                                                                                              \
-		font_set_color(0, 0, 0, 255);                                                              \
-		font_set_pos((x) + (1), (y) + (0));                                                        \
-		font_show_string(glp, str);                                                                \
-		font_set_pos((x) + (0), (y) + (1));                                                        \
-		font_show_string(glp, str);                                                                \
-		font_set_color(fontcol[0], fontcol[1], fontcol[2], fontcol[3]);                            \
-		font_set_pos(x, y);                                                                        \
-		font_show_string(glp, str);                                                                \
-	}
-// end font
 
 void clear_background(u8 r, u8 g, u8 b);
 
 void stage00_init(void) {
-	font_setup();
+	console_init();
 }
 
 void stage00_update(void) {
+	console_clear();
+	console_print(1, 1, "Hello World", 11);
 }
 
 void stage00_draw(void) {
@@ -44,18 +21,7 @@ void stage00_draw(void) {
 
 	clear_background(21, 22, 29);
 
-	font_init(&glistp);
-	font_set_transparent(1);
-	font_set_scale(1.0, 1.0);
-	font_set_win(200, 1);
-	FONTCOLM(FONT_COL);
-
-	// 48 x 31
-	for (int i = 0; i < 31; ++i) {
-		SHOWFONT(&glistp, "################################################", 15, i * 7 + 10);
-	}
-
-	font_finish(&glistp);
+	console_draw(&glistp);
 
 	gDPFullSync(glistp++);
 	gSPEndDisplayList(glistp++);
