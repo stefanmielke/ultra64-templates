@@ -19,8 +19,8 @@ void text_sprite(Sprite *txt, char *str, Font *fnt, int xlen, int ylen) {
 	char *indx;
 	Bitmap *bm;
 
-	txt->width = xlen * 6;
-	txt->height = ylen * 6;
+	txt->width = xlen * FONT_WIDTH;
+	txt->height = ylen * FONT_HEIGHT;
 
 	bm = txt->bitmap;
 
@@ -93,10 +93,10 @@ Sprite template_sprite = {
 	NUM_template_BMS,		  /* Number of bitmaps */
 	NUM_DL(NUM_template_BMS), /* Number of display list locations allocated */
 
-	5,
-	96,			 /* Sprite Bitmap Height: Used_height, physical height */
-	G_IM_FMT_I,	 /* Sprite Bitmap Format */
-	G_IM_SIZ_4b, /* Sprite Bitmap Texel Size */
+	FONT_HEIGHT - 1,
+	SPRITE_WIDTH, /* Sprite Bitmap Height: Used_height, physical height */
+	G_IM_FMT_I,	  /* Sprite Bitmap Format */
+	G_IM_SIZ_4b,  /* Sprite Bitmap Texel Size */
 
 	template_bm, /* Pointer to bitmaps */
 
@@ -122,12 +122,12 @@ static double font_yscale = 1.0;
 
 void font_setup() {
 	for (unsigned char i = 0; i < 255; ++i) {
-		letters_bms[i].width = 6;
-		letters_bms[i].width_img = 96;
-		letters_bms[i].s = (i % 16) * 6;
-		letters_bms[i].t = (i / 16) * 6;
+		letters_bms[i].width = FONT_WIDTH;
+		letters_bms[i].width_img = SPRITE_WIDTH;
+		letters_bms[i].s = (i % SPRITE_CHAR_COUNT_X) * FONT_WIDTH;
+		letters_bms[i].t = (i / SPRITE_CHAR_COUNT_Y) * FONT_HEIGHT;
 		letters_bms[i].buf = letters_img;
-		letters_bms[i].actualHeight = 6;
+		letters_bms[i].actualHeight = FONT_HEIGHT;
 		letters_bms[i].LUToffset = 0;
 	}
 
@@ -225,8 +225,8 @@ void font_show_string(Gfx **glistp, char *val_str) {
 
 	sp = &template_sprite;
 
-	sp->width = font_win_width * 6 + 6;
-	sp->height = font_win_height * 6 + 6;
+	sp->width = font_win_width * FONT_WIDTH + FONT_WIDTH;
+	sp->height = font_win_height * FONT_HEIGHT + FONT_HEIGHT;
 
 	text_sprite(sp, val_str, &letters_font, font_win_width, font_win_height);
 
