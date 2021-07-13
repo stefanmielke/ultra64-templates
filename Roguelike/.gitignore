@@ -1,0 +1,13 @@
+
+**/*.z64
+**/*.n64
+**/*.map
+**/*.ld
+*.o
+*.elf
+*.gen.h
+
+!roguelike.ld
+
+/.vscode/**
+!/.vscode/tasks.json
