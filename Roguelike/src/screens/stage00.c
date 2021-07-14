@@ -5,6 +5,7 @@
 
 #include "../roguelike/console.h"
 #include "../roguelike/player.h"
+#include "../roguelike/sample_map.h"
 
 Player player;
 
@@ -18,6 +19,11 @@ void stage00_init(void) {
 
 void stage00_update(void) {
 	console_clear();
+
+	for (u8 y = 0; y < CONSOLE_SIZE_Y; ++y) {
+		console_print(0, y, &sample_map[y * CONSOLE_SIZE_X], CONSOLE_SIZE_X);
+	}
+
 	console_print(0, 0, "Hello World", 11);
 
 	if (ButtonWasPressed(0, U_JPAD)) {

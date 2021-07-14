@@ -2,9 +2,6 @@
 
 #include "../fonts/font_ext.h"
 
-#define CONSOLE_SIZE_X 48
-#define CONSOLE_SIZE_Y 31
-
 u8 console[CONSOLE_SIZE_Y][CONSOLE_SIZE_X + 1];
 
 int fontcol[4]; /* color for shadowed fonts */
