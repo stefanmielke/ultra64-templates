@@ -2,8 +2,7 @@
 
 This template has:
 - Console-style graphics on a 48x31 screen (uses a tileset you can replace with actual 6x6 images)
-- TODO: Grid-based movement
-- TODO: Helper methods ported from [libtcod](https://github.com/libtcod/libtcod)
+- Grid-based movement
 
 ## How to Build
 

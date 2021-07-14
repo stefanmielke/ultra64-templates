@@ -14,3 +14,5 @@ extern NUContData contdata[];
 extern u8 contPattern;
 
 #define CheckController(cont) (contPattern & (1 << (cont)))
+#define ButtonWasPressed(player_id, button) (contdata[(player_id)].trigger & (button))
+#define ButtonIsHeld(player_id, but) (contdata[(player_id)].button & (but))

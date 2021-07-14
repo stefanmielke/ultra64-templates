@@ -1,18 +1,35 @@
 #include <nusys.h>
 
-#include "../roguelike/console.h"
 #include "../graphic.h"
 #include "../definitions.h"
+
+#include "../roguelike/console.h"
+#include "../roguelike/player.h"
+
+Player player;
 
 void clear_background(u8 r, u8 g, u8 b);
 
 void stage00_init(void) {
 	console_init();
+
+	player_init(&player, 1, 1);
 }
 
 void stage00_update(void) {
 	console_clear();
-	console_print(1, 1, "Hello World", 11);
+	console_print(0, 0, "Hello World", 11);
+
+	if (ButtonWasPressed(0, U_JPAD)) {
+		player_move(&player, 0, -1);
+	} else if (ButtonWasPressed(0, D_JPAD)) {
+		player_move(&player, 0, 1);
+	} else if (ButtonWasPressed(0, L_JPAD)) {
+		player_move(&player, -1, 0);
+	} else if (ButtonWasPressed(0, R_JPAD)) {
+		player_move(&player, 1, 0);
+	}
+	console_print(player.x, player.y, "@", 1);
 }
 
 void stage00_draw(void) {
@@ -30,12 +47,6 @@ void stage00_draw(void) {
 }
 
 void clear_background(u8 r, u8 g, u8 b) {
-	gDPPipeSync(glistp++);
-	gDPSetCycleType(glistp++, G_CYC_FILL);
-	gDPSetDepthImage(glistp++, nuGfxZBuffer);
-	gDPSetColorImage(glistp++, G_IM_FMT_RGBA, G_IM_SIZ_16b, SCREEN_WD, nuGfxZBuffer);
-	gDPSetFillColor(glistp++, (GPACK_ZDZ(G_MAXFBZ, 0) << 16 | GPACK_ZDZ(G_MAXFBZ, 0)));
-	gDPFillRectangle(glistp++, 0, 0, SCREEN_WD - 1, SCREEN_HT - 1);
 	gDPPipeSync(glistp++);
 	gDPSetCycleType(glistp++, G_CYC_FILL);
 	gDPSetColorImage(glistp++, G_IM_FMT_RGBA, G_IM_SIZ_16b, SCREEN_WD, nuGfxCfb_ptr);
