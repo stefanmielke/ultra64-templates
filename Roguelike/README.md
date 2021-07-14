@@ -3,6 +3,7 @@
 This template has:
 - Console-style graphics on a 48x31 screen (uses a tileset you can replace with actual 6x6 images)
 - Grid-based movement
+- Map rendering example using a static sample
 
 ## How to Build
 
@@ -24,4 +25,4 @@ To correct the sizes, you also have to change the `#define` inside `fonts/font.h
 
 It will only allow up to 255 ASCII characters, but you can represent them however you want (including sprites).
 
-The current console size (48x31) takes into consideration that each character is 6x6, so you'll have to change that if your characters are larger or smaller.
+The current console size (48x31) takes into consideration that each character is 6x6, so you'll have to change that if your characters are larger or smaller. For that change the `#define` inside `roguelike/console.h`.

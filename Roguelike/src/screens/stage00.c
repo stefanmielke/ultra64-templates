@@ -1,4 +1,5 @@
 #include <nusys.h>
+#include <stdbool.h>
 
 #include "../graphic.h"
 #include "../definitions.h"
@@ -7,51 +8,83 @@
 #include "../roguelike/player.h"
 #include "../roguelike/sample_map.h"
 
+// player data
 Player player;
+// used to only redraw the screen if there was player interaction (see 'stage00_update')
+bool should_redraw;
 
+// clear background to the colors sent
 void clear_background(u8 r, u8 g, u8 b);
 
+// called after initializing the game (only once)
 void stage00_init(void) {
+	// initializes the console
 	console_init();
 
+	// initializes the player at 1,1 (map starts at 0,0)
 	player_init(&player, 1, 1);
+
+	// first frame needs a redraw
+	should_redraw = true;
 }
 
+// called every frame to update the game state
 void stage00_update(void) {
-	console_clear();
-
-	for (u8 y = 0; y < CONSOLE_SIZE_Y; ++y) {
-		console_print(0, y, &sample_map[y * CONSOLE_SIZE_X], CONSOLE_SIZE_X);
-	}
-
-	console_print(0, 0, "Hello World", 11);
-
+	// player movement. right now the only code that will force a redraw
 	if (ButtonWasPressed(0, U_JPAD)) {
 		player_move(&player, 0, -1);
+		should_redraw = true;
 	} else if (ButtonWasPressed(0, D_JPAD)) {
 		player_move(&player, 0, 1);
+		should_redraw = true;
 	} else if (ButtonWasPressed(0, L_JPAD)) {
 		player_move(&player, -1, 0);
+		should_redraw = true;
 	} else if (ButtonWasPressed(0, R_JPAD)) {
 		player_move(&player, 1, 0);
+		should_redraw = true;
 	}
-	console_print(player.x, player.y, "@", 1);
+
+	if (should_redraw) {
+		// clear the console buffer (sets everything to wall: '#')
+		console_clear();
+
+		// print the sample map (ideally you should draw what's on the camera)
+		for (u8 y = 0; y < CONSOLE_SIZE_Y; ++y) {
+			console_print(0, y, &sample_map[y * CONSOLE_SIZE_X], CONSOLE_SIZE_X);
+		}
+
+		// overwriting what's on the map with "Hello World"
+		console_print(0, 0, "Hello World", 11);
+
+		// draw the player on its position
+		console_print(player.x, player.y, "@", 1);
+	}
 }
 
+// called every frame to draw to the screen. will only draw if 'should_draw' is 'true'.
 void stage00_draw(void) {
-	glistp = glist;
-	rcp_init(glistp);
+	if (should_redraw) {
+		should_redraw = false;
 
-	clear_background(21, 22, 29);
+		glistp = glist;
+		rcp_init(glistp);
 
-	console_draw(&glistp);
+		// clear background with a black color
+		clear_background(0, 0, 0);
 
-	gDPFullSync(glistp++);
-	gSPEndDisplayList(glistp++);
-	nuGfxTaskStart(glist, (s32)(glistp - glist) * sizeof(Gfx), NU_GFX_UCODE_F3DEX2,
-				   NU_SC_SWAPBUFFER);
+		// draw the console that was set on 'stage00_update'
+		console_draw(&glistp);
+
+		// end drawing and send data to RDP
+		gDPFullSync(glistp++);
+		gSPEndDisplayList(glistp++);
+		nuGfxTaskStart(glist, (s32)(glistp - glist) * sizeof(Gfx), NU_GFX_UCODE_F3DEX2,
+					   NU_SC_SWAPBUFFER);
+	}
 }
 
+// clear background to the colors sent
 void clear_background(u8 r, u8 g, u8 b) {
 	gDPPipeSync(glistp++);
 	gDPSetCycleType(glistp++, G_CYC_FILL);
