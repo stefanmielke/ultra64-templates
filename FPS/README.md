@@ -1,4 +1,4 @@
-# First Person Template
+# FPS Template
 
 *Features with * are not implemented but are planned*
 
