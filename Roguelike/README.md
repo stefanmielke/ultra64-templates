@@ -1,7 +1,7 @@
 # Roguelike Template
 
 This template has:
-- Console-style graphics on a 48x31 screen (uses a tileset you can replace with actual 6x6 images)
+- Console-style graphics on a 48x31 screen with font colors (uses a tileset you can replace with actual 6x6 images)
 - Grid-based movement
 - Map rendering example using a static sample
 
@@ -16,6 +16,8 @@ If you are using VSCode, this project comes with a pre-configured task that will
 This project started from the template "2D" and uses NuSystem.
 
 Source code and Makefile are in the `src/` folder, and the textures built during the build are in `resources/`.
+
+You can go to `/screens/stage00.c` to understand how to use the code.
 
 ### Updating Font
 
