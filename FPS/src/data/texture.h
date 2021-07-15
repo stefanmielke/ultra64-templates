@@ -4,3 +4,4 @@
 extern unsigned short spr_ground[];
 extern unsigned short spr_plant[];
 extern unsigned short spr_wall[];
+extern unsigned short spr_gun[];

@@ -8,6 +8,7 @@
 #include "controller.h"
 #include "data/texture.h"
 #include "objects/billboards.h"
+#include "objects/gun.h"
 #include "objects/walls.h"
 
 // Task header
@@ -199,7 +200,7 @@ void render() {
 	gSPDisplayList(glistp++, ground_dl);
 
 	// walls
-	gSPTexture(glistp++, 1024 * 10, 1024 * 10, 0, G_TX_RENDERTILE, G_ON);
+	gSPTexture(glistp++, (32 << 6) * 5, (32 << 6) * 5, 0, G_TX_RENDERTILE, G_ON);
 	gDPLoadTextureBlock(glistp++, spr_wall, G_IM_FMT_RGBA, G_IM_SIZ_16b, 32, 32, 0, G_TX_WRAP,
 						G_TX_WRAP, 5, 5, G_TX_NOLOD, G_TX_NOLOD);
 
@@ -212,7 +213,7 @@ void render() {
 	gSPDisplayList(glistp++, billboard_texture_setup_dl);
 
 	// plants
-	gSPTexture(glistp++, 1024 * 2, 1024 * 2, 0, G_TX_RENDERTILE, G_ON);
+	gSPTexture(glistp++, 32 << 6, 32 << 6, 0, G_TX_RENDERTILE, G_ON);
 	gDPLoadTextureBlock(glistp++, spr_plant, G_IM_FMT_RGBA, G_IM_SIZ_16b, 32, 32, 0, G_TX_WRAP,
 						G_TX_WRAP, 5, 5, G_TX_NOLOD, G_TX_NOLOD);
 
@@ -220,12 +221,21 @@ void render() {
 	DRAW_PLANT(26, 20);
 	DRAW_PLANT(32, 20);
 
-	// Finish rendering
-	gDPFullSync(glistp++);
-	gSPEndDisplayList(glistp++);
+	// gun
+	gSPDisplayList(glistp++, gun_texture_setup_dl);
+
+	gSPTexture(glistp++, 32 << 6, 32 << 6, 0, G_TX_RENDERTILE, G_ON);
+	gDPLoadTextureBlock(glistp++, spr_gun, G_IM_FMT_RGBA, G_IM_SIZ_16b, 32, 32, 0, G_TX_NOMIRROR,
+						G_TX_NOMIRROR, 5, 5, G_TX_NOLOD, G_TX_NOLOD);
+
+	DRAW_GUN_THEGUN();
 }
 
 void render_finish() {
+	// Finish rendering
+	gDPFullSync(glistp++);
+	gSPEndDisplayList(glistp++);
+
 	// Build graphics task
 	rd.theadp->t.ucode_boot = (u64 *)rspbootTextStart;
 	rd.theadp->t.ucode_boot_size = (u32)rspbootTextEnd - (u32)rspbootTextStart;

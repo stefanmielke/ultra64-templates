@@ -13,3 +13,7 @@ extern Gfx wall_dl[];
 // billboards
 extern Gfx billboard_texture_setup_dl[];
 extern Gfx plant_dl[];
+
+// guns
+extern Gfx gun_texture_setup_dl[];
+extern Gfx gun_dl[];
