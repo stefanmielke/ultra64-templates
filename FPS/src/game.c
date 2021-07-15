@@ -49,16 +49,12 @@ int billboard_count; /* count of used billboards on current frame */
 #define IS_BUTTON_PRESSED(btn) (gd.pad[0]->button & btn)
 
 // This structure contains all position info
-typedef struct Position {
+typedef struct {
 	Vec3f pos;
-	Vec3f eye;
-	float view_speed;
-	float move_forward;
-	float move_lateral;
 	Vec3f forward;
 	float angle;
-} Position;
-Position pp;
+} Player;
+Player pp;
 
 // This structure contains movement and controller info
 typedef struct {
@@ -115,16 +111,13 @@ void setup() {
 	pp.pos[0] = 0.0f;
 	pp.pos[1] = 0.0f;
 	pp.pos[2] = 0.0f;
-	pp.eye[0] = 20.0f;
-	pp.eye[1] = 20.0f;
-	pp.eye[2] = 50.0f;
 	pp.angle = 0;
 }
 
 void update() {
 	obj_count = 0;
 	billboard_count = 0;
-	gd.pad = ReadController(0);
+	gd.pad = ReadController(Z_TRIG);
 
 	gd.view_speed = PADTHRESH(gd.pad[0]->stick_x, 10);
 	gd.move_forward = PADTHRESH(gd.pad[0]->stick_y, 10);

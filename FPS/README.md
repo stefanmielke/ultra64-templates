@@ -8,7 +8,7 @@ This template has:
 - Simple wall rendering macros
 - Billboards
 - Custom textures as part of the build pipeline
-- *Weapon to shoot (only a texture)
+- Weapon (only a texture)
 - *Enemies to shoot at and kill (no AI)
 
 ## How to Build
