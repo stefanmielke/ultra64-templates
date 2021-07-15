@@ -23,7 +23,7 @@ void console_clear() {
 	}
 }
 
-void console_print(u8 x, u8 y, char *text, u8 text_length) {
+void console_print(u8 x, u8 y, u8 *text, u8 text_length) {
 	u8 current_color = CONSOLE_COLOR_1;
 	for (u8 i = 0; i < text_length && x < CONSOLE_SIZE_X; i++) {
 		switch (text[i]) {

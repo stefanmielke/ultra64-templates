@@ -40,7 +40,7 @@ void console_set_color(char color, int r, int g, int b, int a);
  * @param text_length
  *        Length of the text (without colors).
  */
-void console_print(u8 x, u8 y, char *text, u8 text_length);
+void console_print(u8 x, u8 y, u8 *text, u8 text_length);
 
 /**
  * @brief Clear all the console to NULL.

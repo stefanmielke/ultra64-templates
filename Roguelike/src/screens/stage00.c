@@ -56,8 +56,9 @@ void stage00_update(void) {
 	}
 
 	if (should_redraw) {
-		// clear the console buffer (sets everything to wall: '#')
-		console_clear();
+		// clear the console buffer (sets everything to NULL: '\0')
+		// it's only needed if you're not going to draw over everything (like we do below)
+		// console_clear();
 
 		// print the sample map (ideally you should draw what's on the camera)
 		for (u8 y = 0; y < CONSOLE_SIZE_Y; ++y) {
@@ -68,7 +69,7 @@ void stage00_update(void) {
 		console_print(0, 1, "\3Hello World", 12);
 		// draw the player on its position in red (\2 is the second color that we set on
 		// 'stage00_init')
-		console_print(player.x, player.y, "\2@", 2);
+		console_print(player.x, player.y, "@", 1);
 	}
 }
 

@@ -18,38 +18,20 @@ u32 text_sprite(Sprite *txt, ConsoleChar *str, Font *fnt, int *start, int width)
 	txt->height = FONT_HEIGHT;
 	Bitmap *bm = txt->bitmap;
 
-	u8 current_color = str[(*start)].color;
 	// check color and change
-	switch (current_color) {
-		case CONSOLE_COLOR_1:
-			font_set_color(fontcol[0][0], fontcol[0][1], fontcol[0][2], fontcol[0][3]);
-			break;
-		case CONSOLE_COLOR_2:
-			font_set_color(fontcol[1][0], fontcol[1][1], fontcol[1][2], fontcol[1][3]);
-			break;
-		case CONSOLE_COLOR_3:
-			font_set_color(fontcol[2][0], fontcol[2][1], fontcol[2][2], fontcol[2][3]);
-			break;
-		case CONSOLE_COLOR_4:
-			font_set_color(fontcol[3][0], fontcol[3][1], fontcol[3][2], fontcol[3][3]);
-			break;
-		case CONSOLE_COLOR_5:
-			font_set_color(fontcol[4][0], fontcol[4][1], fontcol[4][2], fontcol[4][3]);
-			break;
-		default:
-			break;
-	}
+	u8 current_color = str[(*start)].color;
+	u8 console_color = current_color - 1;
+	font_set_color(fontcol[console_color][0], fontcol[console_color][1], fontcol[console_color][2],
+				   fontcol[console_color][3]);
 
-	int pos = 0;
+	u32 pos = 0;
 	for (int i = 0; i < width; i++) {
-		if (i > 0 && str[i + (*start)].color != current_color) {
-			txt->nbitmaps = pos;
-			txt->width = pos * FONT_WIDTH;
-			(*start) += pos;
-			return pos;
-		}
+		// if not current color, stop rendering to change color on next call
+		ConsoleChar cur = str[i + (*start)];
+		if (cur.color != current_color)
+			break;
 
-		bm[pos] = fnt->bitmaps[str[i + (*start)].character];
+		bm[pos] = fnt->bitmaps[cur.character];
 		pos++;
 	}
 
@@ -59,10 +41,9 @@ u32 text_sprite(Sprite *txt, ConsoleChar *str, Font *fnt, int *start, int width)
 	return pos;
 }
 
-
 #define DYN_SPRITE_HACK
 
-#define NUM_template_BMS (255)
+#define NUM_template_BMS (2900)
 
 static Bitmap template_bm[NUM_template_BMS];
 
@@ -266,14 +247,13 @@ void font_set_transparent(int flag) {
 
 void font_show_string(Gfx **glistp, ConsoleChar *val_str) {
 	Sprite *sp;
-	static Gfx gx[20000];
+	static Gfx gx[2900];
 	Gfx *gxp, *dl;
 
 	gxp = *glistp;
 
 	sp = &template_sprite;
 
-	// text_sprite(sp, val_str, &letters_font, font_win_width, 1);
 	u32 chars_read = 0;
 	u32 left = font_win_width;
 	int next = 0;

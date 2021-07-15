@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ultra64.h>
+
 #define CONSOLE_COLOR_1 '\1'
 #define CONSOLE_COLOR_2 '\2'
 #define CONSOLE_COLOR_3 '\3'
