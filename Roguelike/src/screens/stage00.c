@@ -69,7 +69,7 @@ void stage00_update(void) {
 		console_print(0, 1, "\3Hello World", 12);
 		// draw the player on its position in red (\2 is the second color that we set on
 		// 'stage00_init')
-		console_print(player.x, player.y, "@", 1);
+		console_print(player.x, player.y, "\2@", 1);
 	}
 }
 
