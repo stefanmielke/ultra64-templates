@@ -4,6 +4,7 @@
 #include "../graphic.h"
 #include "../definitions.h"
 
+#include "../fonts/font_ext.h"
 #include "../roguelike/console.h"
 #include "../roguelike/player.h"
 #include "../roguelike/sample_map.h"
@@ -20,6 +21,15 @@ void clear_background(u8 r, u8 g, u8 b);
 void stage00_init(void) {
 	// initializes the console
 	console_init();
+
+	// setting default color as WHITE
+	console_set_color(CONSOLE_COLOR_1, 255, 255, 255, 255);
+
+	// setting second color as RED. We'll use this color to draw the player on 'stage00_update'
+	console_set_color(CONSOLE_COLOR_2, 255, 0, 0, 255);
+
+	// setting third color as BLUE. We'll use this color to draw "Hello World" on 'stage00_update'
+	console_set_color(CONSOLE_COLOR_3, 0, 0, 255, 255);
 
 	// initializes the player at 1,1 (map starts at 0,0)
 	player_init(&player, 1, 1);
@@ -55,10 +65,10 @@ void stage00_update(void) {
 		}
 
 		// overwriting what's on the map with "Hello World"
-		console_print(0, 0, "Hello World", 11);
-
-		// draw the player on its position
-		console_print(player.x, player.y, "@", 1);
+		console_print(0, 1, "\3Hello World", 12);
+		// draw the player on its position in red (\2 is the second color that we set on
+		// 'stage00_init')
+		console_print(player.x, player.y, "\2@", 2);
 	}
 }
 

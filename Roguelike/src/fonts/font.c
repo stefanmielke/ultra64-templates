@@ -11,12 +11,58 @@
 
 static Bitmap letters_bms[255];
 static Font letters_font;
+int fontcol[5][4];
+
+// returns 0 if already finished, or read chars to call again
+u32 text_sprite_ex(Sprite *txt, ConsoleChar *str, Font *fnt, int *start, int width) {
+	txt->height = FONT_HEIGHT;
+	Bitmap *bm = txt->bitmap;
+
+	u8 current_color = str[(*start)].color;
+	// check color and change
+	switch (current_color) {
+		case CONSOLE_COLOR_1:
+			font_set_color(fontcol[0][0], fontcol[0][1], fontcol[0][2], fontcol[0][3]);
+			break;
+		case CONSOLE_COLOR_2:
+			font_set_color(fontcol[1][0], fontcol[1][1], fontcol[1][2], fontcol[1][3]);
+			break;
+		case CONSOLE_COLOR_3:
+			font_set_color(fontcol[2][0], fontcol[2][1], fontcol[2][2], fontcol[2][3]);
+			break;
+		case CONSOLE_COLOR_4:
+			font_set_color(fontcol[3][0], fontcol[3][1], fontcol[3][2], fontcol[3][3]);
+			break;
+		case CONSOLE_COLOR_5:
+			font_set_color(fontcol[4][0], fontcol[4][1], fontcol[4][2], fontcol[4][3]);
+			break;
+		default:
+			break;
+	}
+
+	int pos = 0;
+	for (int i = 0; i < width; i++) {
+		if (i > 0 && str[i + (*start)].color != current_color) {
+			txt->nbitmaps = pos;
+			txt->width = pos * FONT_WIDTH;
+			(*start) += pos;
+			return pos;
+		}
+
+		bm[pos] = fnt->bitmaps[str[i + (*start)].character];
+		pos++;
+	}
+
+	txt->width = pos * FONT_WIDTH;
+	txt->nbitmaps = pos;
+	(*start) += pos;
+	return pos;
+}
 
 void text_sprite(Sprite *txt, char *str, Font *fnt, int xlen, int ylen) {
 	int i, ci;
 	int x;
 	int y;
-	char *indx;
 	Bitmap *bm;
 
 	txt->width = xlen * FONT_WIDTH;
@@ -115,12 +161,18 @@ static int font_xpos = 0;
 static int font_ypos = 0;
 
 static int font_win_width = 40;
-static int font_win_height = 1;
 
 static double font_xscale = 1.0;
 static double font_yscale = 1.0;
 
 void font_setup() {
+	for (int i = 0; i < 5; ++i) {
+		fontcol[i][0] = 255;
+		fontcol[i][1] = 255;
+		fontcol[i][2] = 255;
+		fontcol[i][3] = 255;
+	}
+
 	for (unsigned char i = 0; i < 255; ++i) {
 		letters_bms[i].width = FONT_WIDTH;
 		letters_bms[i].width_img = SPRITE_WIDTH;
@@ -157,7 +209,6 @@ void font_init(Gfx **glistp) {
 	font_ypos = 0;
 
 	font_win_width = 40;
-	font_win_height = 1;
 
 	font_xscale = 1.0;
 	font_yscale = 1.0;
@@ -177,9 +228,8 @@ void font_finish(Gfx **glistp) {
 
 /* Set text window area (units are characters) */
 
-void font_set_win(int width, int height) {
+void font_set_win(int width) {
 	font_win_width = width;
-	font_win_height = height;
 }
 
 /* Set text window position (upper left corner) */
@@ -197,6 +247,43 @@ void font_set_scale(double xscale, double yscale) {
 }
 
 /* Set text color */
+
+void font_set_internal_color(char color, int r, int g, int b, int a) {
+	switch (color) {
+		case CONSOLE_COLOR_1:
+			fontcol[0][0] = r;
+			fontcol[0][1] = g;
+			fontcol[0][2] = b;
+			fontcol[0][3] = a;
+			break;
+		case CONSOLE_COLOR_2:
+			fontcol[1][0] = r;
+			fontcol[1][1] = g;
+			fontcol[1][2] = b;
+			fontcol[1][3] = a;
+			break;
+		case CONSOLE_COLOR_3:
+			fontcol[2][0] = r;
+			fontcol[2][1] = g;
+			fontcol[2][2] = b;
+			fontcol[2][3] = a;
+			break;
+		case CONSOLE_COLOR_4:
+			fontcol[3][0] = r;
+			fontcol[3][1] = g;
+			fontcol[3][2] = b;
+			fontcol[3][3] = a;
+			break;
+		case CONSOLE_COLOR_5:
+			fontcol[4][0] = r;
+			fontcol[4][1] = g;
+			fontcol[4][2] = b;
+			fontcol[4][3] = a;
+			break;
+		default:
+			break;
+	}
+}
 
 void font_set_color(unsigned char red, unsigned char green, unsigned char blue,
 					unsigned char alpha) {
@@ -226,9 +313,9 @@ void font_show_string(Gfx **glistp, char *val_str) {
 	sp = &template_sprite;
 
 	sp->width = font_win_width * FONT_WIDTH + FONT_WIDTH;
-	sp->height = font_win_height * FONT_HEIGHT + FONT_HEIGHT;
+	sp->height = FONT_HEIGHT + FONT_HEIGHT;
 
-	text_sprite(sp, val_str, &letters_font, font_win_width, font_win_height);
+	text_sprite(sp, val_str, &letters_font, font_win_width, 1);
 
 	spMove(sp, font_xpos, font_ypos);
 	spColor(sp, font_red, font_grn, font_blu, font_alf);
@@ -237,6 +324,39 @@ void font_show_string(Gfx **glistp, char *val_str) {
 	dl = spDraw(sp);
 
 	gSPDisplayList(gxp++, dl);
+
+	*glistp = gxp;
+}
+
+void font_show_string_ex(Gfx **glistp, ConsoleChar *val_str) {
+	Sprite *sp;
+	static Gfx gx[20000];
+	Gfx *gxp, *dl;
+
+	gxp = *glistp;
+
+	sp = &template_sprite;
+
+	// text_sprite(sp, val_str, &letters_font, font_win_width, 1);
+	u32 chars_read = 0;
+	u32 left = font_win_width;
+	int next = 0;
+	do {
+		u32 x_pos = font_win_width - left;
+
+		chars_read = text_sprite_ex(sp, val_str, &letters_font, &next, left);
+		if (chars_read == 0)
+			break;
+		left -= chars_read;
+
+		spMove(sp, font_xpos + (x_pos * FONT_WIDTH), font_ypos);
+		spColor(sp, font_red, font_grn, font_blu, font_alf);
+		spScale(sp, font_xscale, font_yscale);
+
+		dl = spDraw(sp);
+
+		gSPDisplayList(gxp++, dl);
+	} while (left > 0);
 
 	*glistp = gxp;
 }
