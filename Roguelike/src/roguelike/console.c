@@ -57,7 +57,7 @@ void console_draw(Gfx **glistp) {
 
 	for (u8 y = 0; y < CONSOLE_SIZE_Y; ++y) {
 		font_set_pos(15, y * 7 + 10);
-		font_show_string_ex(glistp, &console[y][0]);
+		font_show_string(glistp, &console[y][0]);
 	}
 
 	font_finish(glistp);

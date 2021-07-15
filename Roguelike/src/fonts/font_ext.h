@@ -15,8 +15,7 @@ void font_setup();
 void font_init(Gfx **);
 void font_finish(Gfx **);
 void font_show_num(Gfx **, int);
-void font_show_string(Gfx **, char *);
-void font_show_string_ex(Gfx **, ConsoleChar *text);
+void font_show_string(Gfx **, ConsoleChar *);
 
 void font_set_scale(double, double);
 void font_set_color(unsigned char, unsigned char, unsigned char, unsigned char);

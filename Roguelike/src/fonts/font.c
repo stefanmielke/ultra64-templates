@@ -14,7 +14,7 @@ static Font letters_font;
 int fontcol[5][4];
 
 // returns 0 if already finished, or read chars to call again
-u32 text_sprite_ex(Sprite *txt, ConsoleChar *str, Font *fnt, int *start, int width) {
+u32 text_sprite(Sprite *txt, ConsoleChar *str, Font *fnt, int *start, int width) {
 	txt->height = FONT_HEIGHT;
 	Bitmap *bm = txt->bitmap;
 
@@ -59,45 +59,6 @@ u32 text_sprite_ex(Sprite *txt, ConsoleChar *str, Font *fnt, int *start, int wid
 	return pos;
 }
 
-void text_sprite(Sprite *txt, char *str, Font *fnt, int xlen, int ylen) {
-	int i, ci;
-	int x;
-	int y;
-	Bitmap *bm;
-
-	txt->width = xlen * FONT_WIDTH;
-	txt->height = ylen * FONT_HEIGHT;
-
-	bm = txt->bitmap;
-
-	i = 0;
-	ci = 0;
-	for (y = 0; y < ylen; y++) {
-		for (x = 0; x < xlen; x++, i++, ci++) {
-			if (str[ci] == '\0') {
-				bm[i] = fnt->bitmaps[0];
-				bm[i].width = -1;
-				txt->nbitmaps = i;
-				return;
-			}
-			if (str[ci] == '\n') {
-				bm[i] = fnt->bitmaps[0];
-				bm[i].buf = NULL;
-				ci--;
-				continue;
-			}
-
-			bm[i] = fnt->bitmaps[str[ci]];
-		};
-
-		if (str[ci] == '\n')
-			ci++;
-	};
-
-	txt->nbitmaps = i;
-
-	return;
-}
 
 #define DYN_SPRITE_HACK
 
@@ -303,32 +264,7 @@ void font_set_transparent(int flag) {
 /* Convert the string to a sprite with the propler bitmaps
    assembled from the basic font texture. */
 
-void font_show_string(Gfx **glistp, char *val_str) {
-	Sprite *sp;
-	static Gfx gx[20000];
-	Gfx *gxp, *dl;
-
-	gxp = *glistp;
-
-	sp = &template_sprite;
-
-	sp->width = font_win_width * FONT_WIDTH + FONT_WIDTH;
-	sp->height = FONT_HEIGHT + FONT_HEIGHT;
-
-	text_sprite(sp, val_str, &letters_font, font_win_width, 1);
-
-	spMove(sp, font_xpos, font_ypos);
-	spColor(sp, font_red, font_grn, font_blu, font_alf);
-	spScale(sp, font_xscale, font_yscale);
-
-	dl = spDraw(sp);
-
-	gSPDisplayList(gxp++, dl);
-
-	*glistp = gxp;
-}
-
-void font_show_string_ex(Gfx **glistp, ConsoleChar *val_str) {
+void font_show_string(Gfx **glistp, ConsoleChar *val_str) {
 	Sprite *sp;
 	static Gfx gx[20000];
 	Gfx *gxp, *dl;
@@ -344,7 +280,7 @@ void font_show_string_ex(Gfx **glistp, ConsoleChar *val_str) {
 	do {
 		u32 x_pos = font_win_width - left;
 
-		chars_read = text_sprite_ex(sp, val_str, &letters_font, &next, left);
+		chars_read = text_sprite(sp, val_str, &letters_font, &next, left);
 		if (chars_read == 0)
 			break;
 		left -= chars_read;
