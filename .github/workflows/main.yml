@@ -21,18 +21,15 @@ jobs:
         run: |
           docker --version
 
-      - name: Find all project folders
-        id: list_folders
+      - name: Find and build all projects
         run: |
-          echo "folders=$(ls -d */ | sed 's:/$::' | jq -R -s -c 'split("\n")[:-1]')" >> $GITHUB_ENV
-
-      - name: Build each project
-        run: |
-          for folder in $(echo ${{ env.folders }} | jq -r '.[]'); do
-            echo "Building $folder..."
-            cd "$folder"
-            chmod +x docker-prepare.sh docker-build.sh
-            ./docker-prepare.sh
-            ./docker-build.sh
-            cd ..
+          for folder in $(find . -maxdepth 1 -type d ! -name "." ! -name ".git"); do
+            if [[ -f "$folder/docker-prepare.sh" && -f "$folder/docker-build.sh" ]]; then
+              echo "Building $folder..."
+              cd "$folder"
+              chmod +x docker-prepare.sh docker-build.sh
+              ./docker-prepare.sh
+              ./docker-build.sh
+              cd ..
+            fi
           done
