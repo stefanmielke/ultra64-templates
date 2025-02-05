@@ -1,0 +1,35 @@
+name: Build All Projects
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker
+        run: |
+          docker --version
+
+      - name: Find and build all projects
+        run: |
+          for folder in $(find . -maxdepth 1 -type d ! -name "." ! -name ".git"); do
+            if [[ -f "$folder/docker-prepare.sh" && -f "$folder/docker-build.sh" ]]; then
+              echo "Building $folder..."
+              cd "$folder"
+              chmod +x docker-prepare.sh docker-build.sh
+              ./docker-prepare.sh
+              ./docker-build.sh
+              cd ..
+            fi
+          done
